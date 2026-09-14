@@ -1,0 +1,2610 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>四象限时间管理 - 猫猫终极版 🐱</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lunar-javascript/1.3.4/lunar.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+        body {
+            margin: 0;
+            padding: 12px;
+            background: var(--bg-color);
+            transition: background 0.5s, color 0.5s;
+        }
+        :root {
+            /* 默认主题 */
+            --bg-color: #f5f7fa;
+            --primary: #ff6b9d;
+            --primary-light: #ffb6c1;
+            --primary-dark: #ff4b8c;
+            --accent: #ff85a2;
+            --scrollbar-track: #fce4ec;
+            --scrollbar-thumb: linear-gradient(180deg, #ffb6c1, #ff85a2, #ff6b9d);
+            --scrollbar-thumb-hover: linear-gradient(180deg, #ff85a2, #ff6b9d, #ff4b8c);
+            --card-bg: white;
+            --text-color: #333;
+            --text-secondary: #666;
+            --border-color: #eee;
+        }
+        body.theme-pink {
+            --bg-color: #fff5f9;
+            --primary: #ff6b9d;
+            --primary-light: #ffb6c1;
+            --primary-dark: #ff4b8c;
+            --accent: #ff85a2;
+            --scrollbar-track: #fce4ec;
+            --scrollbar-thumb: linear-gradient(180deg, #ffb6c1, #ff85a2, #ff6b9d);
+            --scrollbar-thumb-hover: linear-gradient(180deg, #ff85a2, #ff6b9d, #ff4b8c);
+        }
+        body.theme-blue {
+            --bg-color: #f0f7ff;
+            --primary: #3498db;
+            --primary-light: #85c1e9;
+            --primary-dark: #2980b9;
+            --accent: #5dade2;
+            --scrollbar-track: #d6eaf8;
+            --scrollbar-thumb: linear-gradient(180deg, #85c1e9, #5dade2, #3498db);
+            --scrollbar-thumb-hover: linear-gradient(180deg, #5dade2, #3498db, #2980b9);
+        }
+        body.theme-purple {
+            --bg-color: #f9f0ff;
+            --primary: #9b59b6;
+            --primary-light: #d7bde2;
+            --primary-dark: #7d3c98;
+            --accent: #af7ac5;
+            --scrollbar-track: #e8daef;
+            --scrollbar-thumb: linear-gradient(180deg, #d7bde2, #af7ac5, #9b59b6);
+            --scrollbar-thumb-hover: linear-gradient(180deg, #af7ac5, #9b59b6, #7d3c98);
+        }
+        body.night-mode {
+            --bg-color: #1a1a2e;
+            --primary: #ff85c0;
+            --primary-light: #ffb6d9;
+            --primary-dark: #ff5ca8;
+            --accent: #ff9ecf;
+            --scrollbar-track: #2d2d4a;
+            --scrollbar-thumb: linear-gradient(180deg, #ffb6d9, #ff85c0, #ff5ca8);
+            --scrollbar-thumb-hover: linear-gradient(180deg, #ff85c0, #ff5ca8, #e84a8a);
+        }
+        body.night-mode {
+            background: #1a1a2e;
+            color: #da9797;
+        }
+        body.night-mode .container {
+            background: #24243e;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        body.night-mode .title {
+            color: #f8f9fa;
+        }
+        body.night-mode input, 
+        body.night-mode select, 
+        body.night-mode button, 
+        body.night-mode textarea {
+            background: #3a3a55;
+            border-color: #555;
+            color: #f8f9fa;
+        }
+        body.night-mode .task-item {
+            background: #3a3a55;
+        }
+        body.night-mode .stat-card {
+            background: #3a3a55;
+        }
+        body.night-mode .cat-tips {
+            background: #2e2e4e;
+            border-color: #ff85c0;
+        }
+        body.night-mode .daily-words {
+            background: #2e2e4e;
+        }
+        .container {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
+            transition: background 0.5s;
+            position: relative;
+        }
+        .title {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 20px;
+            margin: 0 0 8px 0;
+            transition: color 0.5s;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        .welcome-text{
+            text-align:center;
+            color:#ff6b9d;
+            font-size:15px;
+            margin-bottom:16px;
+        }
+        .weekend-banner {
+            background: #fff0f5;
+            color: #ff6b9d;
+            text-align: center;
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-weight: bold;
+            animation: bounce 2s infinite;
+        }
+        body.night-mode .weekend-banner {
+            background: #3a2e4e;
+            color: #ff85c0;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .menu {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .menu-btn {
+            padding: 12px 8px;
+            font-size: 14px;
+            border: none;
+            border-radius: 8px;
+            background: #3498db;
+            color: white;
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.2s;
+        }
+        .menu-btn:hover {
+            opacity: 0.9;
+        }
+        .cat-btn {
+            background: #ff6b9d !important;
+        }
+        .warn {
+            padding: 10px;
+            border-radius: 6px;
+            margin: 12px 0;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .yellow { background: #fff3cd; color: #85640d; }
+        .orange { background: #ffeeba; color: #c79200; }
+        .red { background: #f8d7da; color: #721c24; }
+        body.night-mode .yellow { background: #3a331a; color: #e6d06c; }
+        body.night-mode .orange { background: #403214; color: #f3b84f; }
+        body.night-mode .red { background: #4a1a20; color: #e88080; }
+        .section {
+            display: none;
+            margin-top: 16px;
+        }
+        .active { display: block; }
+        input, select, button, textarea {
+            padding: 10px;
+            margin: 6px 0;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            width: 100%;
+            font-size: 16px;
+            transition: background 0.5s, border-color 0.5s, color 0.5s;
+        }
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .quadrant-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 10px;
+            margin: 12px 0;
+            position: relative;
+        }
+        .quadrant {
+            border: 2px solid #ddd;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            min-height:300px;
+            max-height:300px;
+            position: relative;
+            overflow: hidden;
+        }
+        .q1 { background: #f8d7da; border-color: #dc3545; }
+        .q2 { background: #d1ecf1; border-color: #17a2b8; }
+        .q3 { background: #fff3cd; border-color: #ffc107; }
+        .q4 { background: #e9ecef; border-color: #6c757d; }
+        body.night-mode .q1 { background: #4a1a20; border-color: #e84a5f; }
+        body.night-mode .q2 { background: #1a3a4a; border-color: #4aa8c4; }
+        body.night-mode .q3 { background: #3a331a; border-color: #f1c40f; }
+        body.night-mode .q4 { background: #2a2a38; border-color: #889299; }
+        .quadrant h3 {
+            font-size: 14px;
+            margin: 0 0 6px 0;
+        }
+        .task-list-wrapper {
+            max-height: 240px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .task-item {
+            background: white;
+            padding: 8px;
+            margin: 6px 0;
+            border-radius: 6px;
+            border-left: 3px solid #ddd;
+            cursor: grab;
+            user-select:none;
+            -webkit-user-select:none;
+            transition: background 0.5s;
+        }
+        .task-item:active {
+            cursor: grabbing;
+        }
+        .task-item .progress-bar {
+            height: 8px;
+            background: #eee;
+            border-radius: 4px;
+            margin: 4px 0;
+            overflow: hidden;
+        }
+        body.night-mode .task-item .progress-bar {
+            background: #4a4a6a;
+        }
+        .task-item .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s linear;
+        }
+        .task-item .time-info {
+            font-size: 12px;
+            color: #666;
+        }
+        body.night-mode .task-item .time-info {
+            color: #ccc;
+        }
+        #logArea {
+            max-height: 250px;
+            overflow-y: auto;
+            padding-right: 8px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary) var(--scrollbar-track);
+        }
+        #logArea::-webkit-scrollbar {
+            width: 10px;
+        }
+        #logArea::-webkit-scrollbar-track {
+            background: var(--scrollbar-track);
+            border-radius: 10px;
+        }
+        #logArea::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 10px;
+            border: none;
+        }
+        #logArea::-webkit-scrollbar-thumb:hover {
+            background: var(--scrollbar-thumb-hover);
+        }
+        .log-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        body.night-mode .log-item {
+            border-bottom-color: #444;
+        }
+        .log-item .log-number {
+            font-weight: bold;
+            color: #ff6b9d;
+            min-width: 30px;
+        }
+        .log-item .log-time {
+            color: #888;
+            font-size: 12px;
+            min-width: 140px;
+        }
+        .log-item .log-text {
+            flex: 1;
+            word-break: break-all;
+        }
+        .log-item .log-actions {
+            display: flex;
+            gap: 4px;
+            margin-left: auto;
+        }
+        .log-btn {
+            border: none;
+            background: #f0f0f0;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .log-btn:hover {
+            transform: scale(1.1);
+        }
+        .log-btn.edit {
+            background: #e3f2fd;
+        }
+        .log-btn.edit:hover {
+            background: #bbdefb;
+        }
+        .log-btn.delete {
+            background: #ffebee;
+        }
+        .log-btn.delete:hover {
+            background: #ffcdd2;
+        }
+        body.night-mode .log-btn {
+            background: #3a3a5a;
+        }
+        body.night-mode .log-btn.edit {
+            background: #1a3a5a;
+        }
+        body.night-mode .log-btn.edit:hover {
+            background: #2a4a6a;
+        }
+        body.night-mode .log-btn.delete {
+            background: #5a1a2a;
+        }
+        body.night-mode .log-btn.delete:hover {
+            background: #6a2a3a;
+        }
+        .chart-container {
+            height: 300px;
+            width: 100%;
+            position: relative;
+            margin: 12px 0;
+        }
+        .cat-tips {
+            background: #fff9fc;
+            border: 2px solid #ff6b9d;
+            border-radius: 10px;
+            padding: 12px;
+            margin: 10px 0;
+            transition: background 0.5s, border-color 0.5s;
+        }
+        .cat-tips p {
+            margin: 6px 0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .daily-words {
+            background: #fff5f9;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #d65a8e;
+            transition: background 0.5s, color 0.5s;
+        }
+        .birthday-warn {
+            background: #ffe8f0;
+            border: 2px solid #ff85b0;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            color: #d63384;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        body.night-mode .birthday-warn {
+            background: #4a2e4e;
+            border-color: #ff85c0;
+            color: #ff99cc;
+        }
+        .reason-input {
+            margin: 10px 0;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            transition: background 0.5s;
+        }
+        .achievements-section {
+            margin-top: 16px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 8px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary) var(--scrollbar-track);
+        }
+        .achievements-section::-webkit-scrollbar {
+            width: 10px;
+        }
+        .achievements-section::-webkit-scrollbar-track {
+            background: var(--scrollbar-track);
+            border-radius: 10px;
+        }
+        .achievements-section::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 10px;
+            border: none;
+        }
+        .achievements-section::-webkit-scrollbar-thumb:hover {
+            background: var(--scrollbar-thumb-hover);
+        }
+        .achievement-item {
+            background: #f0f8fb;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            border-left: 4px solid #ff6b9d;
+            animation: fadeIn 0.5s ease-in;
+        }
+        body.night-mode .achievement-item {
+            background: #2e2e4e;
+            border-left-color: #ff85c0;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .egg-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 2000;
+            max-width: 450px;
+            max-height: 75vh;
+            overflow-y: auto;
+            padding-right: 12px;
+            text-align: center;
+            animation: pop 0.3s ease-in;
+            scrollbar-width: thin;
+            scrollbar-color: #ff6b9d #fce4ec;
+        }
+        .egg-modal::-webkit-scrollbar {
+            width: 10px;
+        }
+        .egg-modal::-webkit-scrollbar-track {
+            background: #fce4ec;
+            border-radius: 10px;
+        }
+        .egg-modal::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 10px;
+            border: none;
+        }
+        .egg-modal::-webkit-scrollbar-thumb:hover {
+            background: var(--scrollbar-thumb-hover);
+        }
+        .egg-modal::-webkit-scrollbar-track {
+            background: var(--scrollbar-track);
+            border-radius: 10px;
+        }
+        body.night-mode .egg-modal {
+            background: var(--card-bg, #24243e);
+            color: var(--text-color, #f8f9fa);
+        }
+        @keyframes pop {
+            from { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+            to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+        .paw-print {
+            position: fixed;
+            font-size: 24px;
+            pointer-events: none;
+            animation: float 1.5s ease-out forwards;
+            z-index: 100;
+        }
+        body.night-mode .paw-print {
+            color: #ff85c0;
+        }
+        @keyframes float {
+            0% { opacity: 1; transform: translate(0, 0) rotate(0deg); }
+            100% { opacity: 0; transform: translate(var(--x), var(--y)) rotate(var(--rotate)); }
+        }
+        .fireworks-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        .firework {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            animation: firework 1.5s ease-out forwards;
+        }
+        @keyframes firework {
+            0% { transform: translate(0, 0); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)); opacity: 0; }
+        }
+        .prompt-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            z-index: 1000;
+            max-width: 400px;
+            width: 90%;
+            transition: background 0.5s, color 0.5s;
+            display: none;
+        }
+        body.night-mode .prompt-modal {
+            background: #24243e;
+            color: #f8f9fa;
+        }
+        .prompt-modal h4 {
+            margin-top: 0;
+            color: #ff6b9d;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+        }
+        .modal-overlay.active {
+            display: block;
+        }
+        .priority-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: white;
+            margin-right: 4px;
+        }
+        .p-high { background: #e74c3c; }
+        .p-middle { background: #f39c12; }
+        .p-low { background: #2ecc71; }
+        .theme-indicator {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        body.night-mode .theme-indicator {
+            color: #ccc;
+        }
+
+        /* 统一：全部展开/收起样式 */
+        .expandable-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 8px;
+            margin-bottom: 10px;
+            display: none; /* 默认隐藏 */
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary) var(--scrollbar-track);
+            min-height: 100px;
+            background-color: white;
+        }
+        body.night-mode .expandable-list {
+            background-color: #3a3a55;
+        }
+        .expandable-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        .expandable-list::-webkit-scrollbar-track {
+            background: var(--scrollbar-track);
+            border-radius: 10px;
+        }
+        .expandable-list::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 10px;
+            border: none;
+        }
+        .expandable-list::-webkit-scrollbar-thumb:hover {
+            background: var(--scrollbar-thumb-hover);
+        }
+        .expandable-list div {
+            padding: 4px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        body.night-mode .expandable-list div {
+            border-bottom-color: #333;
+        }
+        .expand-btn {
+            background: #ff6b9d;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+
+        /* ========== 猫爪滚动条（核心） ========== */
+        #warnArea, .expandable-list, .task-list-wrapper {
+            max-height: 350px;
+            overflow-y: auto;
+            padding-right: 8px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary) var(--scrollbar-track);
+        }
+        #warnArea::-webkit-scrollbar,
+        .expandable-list::-webkit-scrollbar,
+        .task-list-wrapper::-webkit-scrollbar {
+            width: 10px;
+        }
+        #warnArea::-webkit-scrollbar-track,
+        .expandable-list::-webkit-scrollbar-track,
+        .task-list-wrapper::-webkit-scrollbar-track {
+            background: var(--scrollbar-track);
+            border-radius: 10px;
+        }
+        #warnArea::-webkit-scrollbar-thumb,
+        .expandable-list::-webkit-scrollbar-thumb,
+        .task-list-wrapper::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 10px;
+            border: none;
+        }
+        #warnArea::-webkit-scrollbar-thumb:hover,
+        .expandable-list::-webkit-scrollbar-thumb:hover,
+        .task-list-wrapper::-webkit-scrollbar-thumb:hover {
+            background: var(--scrollbar-thumb-hover);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="weekendBanner" class="weekend-banner" style="display: none;"></div>
+        
+        <h1 class="title" id="mainTitle">四象限时间管理 📝</h1>
+        <div class="theme-indicator" id="themeIndicator">当前主题：默认</div>
+        <div class="welcome-text">很高兴为人服务哦~❤️(*^▽^*) </div>
+        
+        <div id="birthdayWarn" class="birthday-warn"></div>
+        <div id="warnArea"></div>
+
+        <div class="menu">
+            <button class="menu-btn" onclick="showSection('input')">1.添加任务</button>
+            <button class="menu-btn" onclick="showSection('finish')">2.标记完成</button>
+            <button class="menu-btn" onclick="showSection('edit')">3.修改DDL</button>
+            <button class="menu-btn" onclick="showSection('modify')">4.修改任务</button>
+            <button class="menu-btn" onclick="showSection('log')">5.工作日志</button>
+            <button class="menu-btn" onclick="showSection('progress')">6.进度查看</button>
+            <button class="menu-btn cat-btn" onclick="showSection('cat');countCatBtnClick()">🐱 猫猫提示</button>
+            <button class="menu-btn" onclick="showSection('achievements')">🏆 成就面板</button>
+            <button class="menu-btn" onclick="toggleNightMode()">🌙 深夜模式</button>
+            <button class="menu-btn" onclick="showSection('feedback')">💬 问题反馈</button>
+        </div>
+
+        <div id="achievements" class="section">
+            <h3>🏆 已解锁成就</h3>
+            <div id="achievementsList" class="achievements-section">
+                <p>暂无解锁的成就哦，快去完成任务吧～ฅ^•ﻌ•^ฅ</p>
+            </div>
+        </div>
+
+        <div id="feedback" class="section">
+            <h3>🐾 猫猫收件箱 📮</h3>
+            <div class="cat-tips">
+                <p>喵～如果人在使用时遇到问题，或者有什么想告诉猫猫的，都可以写在这里哦～🐱</p>
+                <p>点击下面的按钮，猫猫会在新窗口打开问卷～🎁</p>
+                <p>可以填写文本、上传文件，猫猫都能看到哦～✨</p>
+            </div>
+            <button onclick="openFeedbackWindow()" style="background:#ff6b9d; font-size:16px; padding:12px;">🐱 打开反馈问卷</button>
+            <div style="margin-top: 12px; padding:12px; background: #fff3cd; color: #85640d; border-radius: 8px; text-align: center; font-size:14px;">
+                💡 点击后会在新窗口打开问卷，登录后就能填写啦～
+            </div>
+            <div style="margin-top: 12px; padding:12px; background: #e3f2fd; color: #1565c0; border-radius: 8px; font-size:14px;">
+                📋 <strong>问卷链接：</strong><a href="https://docs.qq.com/doc/DSEdYb0xaZXR6ZXJF" target="_blank" style="color:#1565c0;">https://docs.qq.com/doc/DSEdYb0xaZXR6ZXJF</a>
+            </div>
+        </div>
+
+        <div id="cat" class="section">
+            <h3>🐱 猫猫温馨提示</h3>
+            <div class="cat-tips" id="catTipsContent"></div>
+            <div class="daily-words" id="dailyWords"></div>
+        </div>
+
+        <div id="input" class="section active">
+            <h3>新增任务（按引导输入，输 q 退出）</h3>
+            <button onclick="startTaskInput()" style="width:100%;background:#ff6b9d;">开始交互输入任务</button>
+            <div class="quadrant-container" id="quadrant"></div>
+        </div>
+
+        <!-- 标记完成：点击展开 -->
+        <div id="finish" class="section">
+            <h3>标记完成（清除任务）</h3>
+            <button class="expand-btn" onclick="toggleFinishList()">📋 点击展开/收起 任务清单</button>
+            <div id="taskListFinish" class="expandable-list" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 8px; margin-bottom: 10px; background-color: white;">
+                <div>0 - 测试任务1 | 重要但不紧急 | 优先级：高</div>
+                <div>1 - 测试任务2 | 重要但不紧急 | 优先级：高</div>
+                <div>2 - 测试任务3 | 重要但不紧急 | 优先级：高</div>
+                <div>3 - 测试任务4 | 重要但不紧急 | 优先级：高</div>
+                <div>4 - 测试任务5 | 重要但不紧急 | 优先级：高</div>
+                <div>5 - 测试任务6 | 重要但不紧急 | 优先级：高</div>
+                <div>6 - 测试任务7 | 重要但不紧急 | 优先级：高</div>
+                <div>7 - 测试任务8 | 重要但不紧急 | 优先级：高</div>
+                <div>8 - 测试任务9 | 重要但不紧急 | 优先级：高</div>
+                <div>9 - 测试任务10 | 重要但不紧急 | 优先级：高</div>
+            </div>
+            <input type="text" id="finishInput" placeholder="输入序号，q退出">
+            <button onclick="finishTask()">确认完成</button>
+        </div>
+
+        <!-- 修改DDL：点击展开 -->
+        <div id="edit" class="section">
+            <h3>修改截止日期</h3>
+            <button class="expand-btn" onclick="toggleEditTextList()">📋 点击展开/收起 任务清单</button>
+            <div id="taskListEdit" class="expandable-list" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 8px; margin-bottom: 10px; background-color: white;">
+                <div>0 - 测试任务1 | 重要但不紧急 | 优先级：高</div>
+                <div>1 - 测试任务2 | 重要但不紧急 | 优先级：高</div>
+                <div>2 - 测试任务3 | 重要但不紧急 | 优先级：高</div>
+                <div>3 - 测试任务4 | 重要但不紧急 | 优先级：高</div>
+                <div>4 - 测试任务5 | 重要但不紧急 | 优先级：高</div>
+                <div>5 - 测试任务6 | 重要但不紧急 | 优先级：高</div>
+                <div>6 - 测试任务7 | 重要但不紧急 | 优先级：高</div>
+                <div>7 - 测试任务8 | 重要但不紧急 | 优先级：高</div>
+                <div>8 - 测试任务9 | 重要但不紧急 | 优先级：高</div>
+                <div>9 - 测试任务10 | 重要但不紧急 | 优先级：高</div>
+            </div>
+            <input type="text" id="editIndex" placeholder="输入任务序号">
+            <input type="datetime-local" id="newDdl">
+            <button onclick="editTaskDdl()">确认修改</button>
+        </div>
+
+        <!-- 修改任务：点击展开 -->
+        <div id="modify" class="section">
+            <h3>修改任务内容 / 类型 / 优先级</h3>
+            <button class="expand-btn" onclick="toggleModifyList()">📋 点击展开/收起 任务清单</button>
+            <div id="taskListModify" class="expandable-list" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 8px; margin-bottom: 10px; background-color: white;">
+                <div>0 - 测试任务1 | 重要但不紧急 | 优先级：高</div>
+                <div>1 - 测试任务2 | 重要但不紧急 | 优先级：高</div>
+                <div>2 - 测试任务3 | 重要但不紧急 | 优先级：高</div>
+                <div>3 - 测试任务4 | 重要但不紧急 | 优先级：高</div>
+                <div>4 - 测试任务5 | 重要但不紧急 | 优先级：高</div>
+                <div>5 - 测试任务6 | 重要但不紧急 | 优先级：高</div>
+                <div>6 - 测试任务7 | 重要但不紧急 | 优先级：高</div>
+                <div>7 - 测试任务8 | 重要但不紧急 | 优先级：高</div>
+                <div>8 - 测试任务9 | 重要但不紧急 | 优先级：高</div>
+                <div>9 - 测试任务10 | 重要但不紧急 | 优先级：高</div>
+            </div>
+            <input type="text" id="modifyIndex" placeholder="输入要修改的任务序号">
+            <input type="text" id="modifyContent" placeholder="新的任务内容">
+            <select id="modifyType">
+                <option value="2">重要但不紧急</option>
+                <option value="3">紧急但不重要</option>
+                <option value="1">重要且紧急</option>
+                <option value="4">不重要不紧急</option>
+            </select>
+            <select id="modifyPriority">
+                <option value="high">高优先级</option>
+                <option value="middle">中优先级</option>
+                <option value="low">低优先级</option>
+            </select>
+            <button onclick="modifyTask()">确认修改</button>
+        </div>
+
+        <div id="log" class="section">
+            <h3>工作日志（每日自动导出到桌面）</h3>
+            <div class="stats-grid">
+                <div class="stat-card"><p>总任务数</p><p id="logTotalTasks">0</p></div>
+                <div class="stat-card"><p>已完成</p><p id="logFinishedTasks">0</p></div>
+                <div class="stat-card"><p>过期任务</p><p id="logExpiredTasks">0</p></div>
+                <div class="stat-card"><p>DDL过半</p><p id="logHalfTasks">0</p></div>
+            </div>
+            <textarea id="manualLogContent" placeholder="输入日志内容"></textarea>
+            <button onclick="addManualLog()">添加日志</button>
+            <div style="margin: 10px 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <span>导出范围：</span>
+                <input type="date" id="logStartDate" style="padding: 4px; border-radius: 4px; border: 1px solid #ddd;">
+                <span>至</span>
+                <input type="date" id="logEndDate" style="padding: 4px; border-radius: 4px; border: 1px solid #ddd;">
+                <button onclick="exportLogRange()" style="background:#27ae60;">导出选定日期</button>
+                <button onclick="exportLogNow()" style="background:#2ecc71;">导出全部</button>
+            </div>
+            <button onclick="confirmClearLogs()" style="background:#e74c3c;">清空所有日志</button>
+            <h4>日志记录</h4>
+            <div id="logArea"></div>
+        </div>
+
+        <div id="progress" class="section">
+            <h3>进度统计</h3>
+            <div id="progressStats"></div>
+            <div class="chart-container">
+                <canvas id="progressChart"></canvas>
+            </div>
+            <h4>DDL进度统计</h4>
+            <div class="chart-container">
+                <canvas id="ddlProgressChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay"></div>
+    <div class="prompt-modal" id="promptModal">
+        <h4 id="modalTitle">任务输入</h4>
+        <div id="modalContent"></div>
+        <input type="text" id="modalInput" placeholder="输入内容">
+        <button onclick="submitModalInput()">确认</button>
+        <button onclick="closeModal()" style="background:#dc3545;">取消</button>
+    </div>
+
+    <div class="egg-modal" id="eggModal" style="display: none;">
+        <h4 id="eggTitle">🎉 彩蛋！</h4>
+        <p id="eggContent"></p>
+        <button onclick="closeEggModal()">关闭</button>
+    </div>
+
+    <div class="fireworks-container" id="fireworksContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        let logs = JSON.parse(localStorage.getItem('logs')) || [];
+        let finishedTasks = JSON.parse(localStorage.getItem('finishedTasks')) || [];
+        let inputStep = 0;
+        let tempTask = {};
+        let draggedTaskIndex = -1;
+        let chart1 = null;
+        let chart2 = null;
+        let realTimeTimer = null; // 实时刷新定时器
+
+        let catBtnClickCount = 0;
+        let idleTimer = null;
+        let lastActivityTime = new Date();
+        let fireworksActive = false; // 追踪烟花是否在播放
+        let unlockedAchievements = JSON.parse(localStorage.getItem('unlockedAchievements')) || [];
+        let currentTheme = localStorage.getItem('currentTheme') || 'default';
+        let dailyWordsList = [];
+        let shuffledDailyWords = [];
+        let currentWordIndex = 0;
+
+        // ========== 核心控制变量 ==========
+        // 1. 当天已触发的时间段提示，避免重复
+        let triggeredSlots = JSON.parse(localStorage.getItem('triggeredSlots')) || [];
+        // 2. 当天是否问过深夜模式
+        let todayAskedNightMode = localStorage.getItem('todayAskedNightMode') || '';
+        // 3. 上一次整点提醒的小时，确保整点只弹一次
+        let lastRemindHour = parseInt(localStorage.getItem('lastRemindHour')) || -1;
+        // 4. 今天的日期，用于重置所有每日标记
+        const todayDate = new Date().toLocaleDateString();
+        // 5. 连续使用天数
+        let consecutiveDays = parseInt(localStorage.getItem('consecutiveDays')) || 1;
+        // 6. 上次使用日期
+        let lastUseDate = localStorage.getItem('lastUseDate') || todayDate;
+        // 7. 交互次数
+        let interactionCount = parseInt(localStorage.getItem('interactionCount')) || 0;
+        // 8. 主题切换次数
+        let themeChangeCount = parseInt(localStorage.getItem('themeChangeCount')) || 0;
+        // 9. 已触发的彩蛋
+        let triggeredEggs = JSON.parse(localStorage.getItem('triggeredEggs')) || [];
+        // 10. 功能按钮点击记录
+        let buttonClicks = JSON.parse(localStorage.getItem('buttonClicks')) || {};
+
+        // 重置每日标记：日期变了就清空所有当天的触发记录
+        if (localStorage.getItem('lastActiveDate') !== todayDate) {
+            triggeredSlots = [];
+            todayAskedNightMode = '';
+            lastRemindHour = -1;
+            localStorage.setItem('triggeredSlots', JSON.stringify(triggeredSlots));
+            localStorage.setItem('todayAskedNightMode', todayAskedNightMode);
+            localStorage.setItem('lastRemindHour', lastRemindHour);
+            localStorage.setItem('lastActiveDate', todayDate);
+        }
+
+        // ========== 彩蛋/功能文案标注 ==========
+
+        // 【功能】猫猫普通提示 - 每天随机显示一条在猫猫提示区域
+        const CAT_NORMAL_TIPS = [
+            "记得多喝水哦～ ",
+            "少熬夜，早点睡哦～ 😴",
+            "完成任务要给自己奖励哦～ ✨",
+            "要按时吃饭!! 猫猫也饿了，想和你一起吃饭🍚",
+            "每天进步一点点就很棒啦～ 猫猫为你骄傲ฅ^•ﻌ•^ฅ",
+            "工作再忙也要记得休息哦～ 猫猫陪你一起偷懒🐱",
+            "武汉天气好不好，人要开心好不好☀️",
+            "人真的超棒的～ 💖",
+            "不要给自己太大压力哦～ 猫猫会一直在你身边的🌟",
+            "今天也要加油哦～ 猫猫相信你一定可以的"
+        ];
+
+        // 【彩蛋】每日一句/每日寄语 - 每天显示一条在💌区域
+        const CAT_DAILY_WORDS_BASE = [
+            "今天也要开心呀🥳", "完成比完美更重要", "慢慢来，猫猫陪着你", "累了就休息😌", "你超棒的!!",
+            "小小的进步也是进步✨", "坚持就是胜利呀", "相信自己，你可以的!!", "每一份努力都不会白费🌟",
+            "给自己一点耐心吧❤️", "今天的你也超厉害⭐", "不要着急，一步一步来🐾", "你值得被肯定✨",
+            "愿君无忧，笑作春温", "休息是为了更好地前进☕", "小小的目标，大大的成就🎯",
+            "做自己的光，不需要太亮🌟", "慢慢来，时间会给你答案⏳", "你比想象中更强大",
+            "每天都要元气满满哦🥰", "你本来就很好💫", "快乐是最重要的呀(*^▽^*)",
+            "坚持下去，就会看到光✨", "你真的很棒，不要怀疑🌟", "累了就停下来抱抱自己🤗",
+            "你想要的都会实现🌱", "所爱隔山海，山海皆可平", "平凡的日子也值得珍惜✨",
+            "逐声计划做大做强!!", "你的付出，时光会记得⏰", "慢慢来，会好的💫",
+            "你值得所有美好的事物和爱🎁"
+        ];
+        // 【功能】生日日期设置
+        const BIRTHDAY_MONTH = 9;
+        const BIRTHDAY_DAY = 6;
+
+        // 【彩蛋】完成任务鼓励语 - 完成任务时随机显示一条
+        const FINISH_ENCOURAGE = [
+            "太棒啦！任务完成🥳 猫猫为你骄傲～",
+            "你超厉害的！继续加油✨ 猫猫在旁边给你打气哦",
+            "猫猫为你鼓掌👏 真的好棒呀",
+            "又完成一个任务，猫猫要给你奖励小鱼干～",
+            "今天的人也闪闪发光🌟",//愿我如星君如月
+            "完美收官！奖励自己一下吧🍬",
+            "任务完成！真的超厉害的～ฅ^•ﻌ•^ฅ",
+            "太棒啦！又离目标近了一步～✨ 猫猫陪你一起努力",//想说我会一直在，可你好像比较悲观，那我只说现在，现在的我很想陪着你，也很喜欢你
+            "完成任务的感觉是不是很棒呀？🥰 猫猫也很开心",
+            "好厉害！继续保持这种状态哦～"
+        ];
+
+        // 【彩蛋】添加任务成功的拟猫化回复 - 添加任务时随机显示一条
+        const ADD_TASK_SUCCESS = [
+            "任务添加成功啦！猫猫会好好帮你盯着DDL的哦🐾 绝对不会让你忘记的～",
+            "太棒啦！又新增一个任务，加油哦😺 猫猫在旁边给你打气",
+            "收到收到！猫猫已经把任务记在小本本上啦📝🐱 字迹工工整整的～",
+            "任务添加完成～人要记得按时完成哦，猫猫会监督你的😼 每天都会提醒你",
+            "好耶！又多了一个要完成的小目标，人超棒的✨🐱 我们一起努力吧",
+            "猫猫已经帮你把任务收好啦，要按时完成哦😽 完成了记得告诉猫猫～",
+            "任务添加成功！猫猫会像守护小鱼干一样守护你的任务哦🐟",
+            "好棒！人又给自己设定了新的目标～✨ 猫猫会一直陪着你",
+            "任务已记录在猫猫的小本本上啦📝 人要加油完成哦～",
+            "收到任务！猫猫会帮你盯着时间，绝对不会让你错过DDL的～🐾"
+        ];
+
+        // 【功能】完整时间段提示语 - 不同时间段显示不同问候
+        const TIME_GREETINGS = {
+            morning_greet: { time: [8, 11.5], text: "☀️ 早安～早上好呀人！新的一天也要元气满满哦🐱💖" },
+            breakfast: { time: [8, 10], text: "🍞 人记得吃早饭哦～不吃早饭猫猫会担心的🥺" },
+            noon_greet: { time: [11.5, 13], text: "☀️ 午安呀～人记得吃午饭哦🍚😋" },
+            afternoon_greet: { time: [13, 18], text: "☀️ 下午好～人辛苦啦，要继续加油哦✨" },
+            evening_greet: { time: [18, 23], text: "🌙 晚上好～今天辛苦啦，好好放松一下吧😌" },
+            dinner: { time: [17.5, 20], text: "🍚 人该吃晚饭啦～要好好吃饭哦🍽️" },
+            sleep_warn: { time: [1, 3], text: "😴 人快点睡觉啦～太晚睡猫猫会超级担心的🥺💤" },
+            sunrise: { time: [3, 6], text: "🌅 人是在等日出吗？猫猫陪着你哦🐾✨" },
+            wake_up: { time: [6, 8], text: "🌞 猫猫在等主人醒来哦～早安呀☀️🐱" }
+        };
+
+        // 【功能】成就列表 - 所有成就的定义
+        const ACHIEVEMENTS_LIST = [
+            { id: 1, name: "初出茅庐", desc: "完成第一个任务", trigger: "finish", count: 1 },
+            { id: 2, name: "任务达人", desc: "完成10个任务", trigger: "finish", count: 10 },
+            { id: 3, name: "任务大师", desc: "完成20个任务", trigger: "finish", count: 20 },
+            { id: 4, name: "任务宗师", desc: "完成50个任务", trigger: "finish", count: 50 },
+            { id: 5, name: "百折不挠", desc: "完成100个任务", trigger: "finish", count: 100 },
+            { id: 6, name: "新手入门", desc: "添加第一个任务", trigger: "add", count: 1 },
+            { id: 7, name: "任务收集者", desc: "添加10个任务", trigger: "add", count: 10 },
+            { id: 8, name: "任务收藏家", desc: "添加20个任务", trigger: "add", count: 20 },
+            { id: 9, name: "任务大亨", desc: "添加50个任务", trigger: "add", count: 50 },
+            { id: 10, name: "任务帝王", desc: "添加100个任务", trigger: "add", count: 100 },
+            { id: 11, name: "高效达人", desc: "一天内完成5个任务", trigger: "dailyFinish", count: 5 },
+            { id: 12, name: "时间管理大师", desc: "连续7天使用系统", trigger: "continuousUse", count: 7 },
+            { id: 13, name: "早起的鸟儿", desc: "在早上8点前添加任务", trigger: "earlyBird", count: 1 },
+            { id: 14, name: "夜猫子", desc: "在凌晨1点后添加任务", trigger: "nightOwl", count: 1 },
+            { id: 15, name: "完美主义者", desc: "无过期任务", trigger: "noExpired", count: 1 },
+            { id: 16, name: "紧急处理专家", desc: "完成10个重要且紧急任务", trigger: "finishQ1", count: 10 },
+            { id: 17, name: "规划大师", desc: "添加10个重要但不紧急任务", trigger: "addQ2", count: 10 },
+            { id: 18, name: "琐事清理者", desc: "完成10个紧急但不重要任务", trigger: "finishQ3", count: 10 },
+            { id: 19, name: "休闲达人", desc: "添加10个不重要不紧急任务", trigger: "addQ4", count: 10 },
+            { id: 20, name: "日志记录者", desc: "手动添加10条日志", trigger: "manualLog", count: 10 },
+            { id: 21, name: "日志达人", desc: "导出日志10次", trigger: "exportLog", count: 10 },
+            { id: 22, name: "优先级掌控者", desc: "设置50个高优先级任务", trigger: "highPriority", count: 50 },
+            { id: 23, name: "灵活调整", desc: "修改10次任务DDL", trigger: "editDdl", count: 10 },
+            { id: 24, name: "精益求精", desc: "修改20次任务内容", trigger: "modifyTask", count: 20 },
+            { id: 25, name: "猫猫爱好者", desc: "点击猫猫按钮50次", trigger: "catBtnClick", count: 50 },
+            { id: 26, name: "彩蛋发现者", desc: "触发第一个彩蛋", trigger: "eggTrigger", count: 1 },
+            { id: 27, name: "彩蛋收藏家", desc: "触发5个不同彩蛋", trigger: "eggCollect", count: 5 },
+            { id: 28, name: "彩蛋大师", desc: "触发所有彩蛋", trigger: "eggMaster", count: 10 },
+            { id: 29, name: "主题探索者", desc: "切换所有主题", trigger: "themeChange", count: 3 },
+            { id: 30, name: "夜间模式爱好者", desc: "使用夜间模式10次", trigger: "nightModeUse", count: 10 },
+            { id: 31, name: "周末劳模", desc: "周末完成10个任务", trigger: "weekendFinish", count: 10 },
+            { id: 32, name: "摸鱼被抓", desc: "触发闲置提醒10次", trigger: "idleWarn", count: 10 },
+            { id: 33, name: "猫猫控", desc: "添加10个含“猫猫”的任务", trigger: "catKeyword", count: 10 },
+            { id: 34, name: "DDL冲刺者", desc: "在12小时内完成即将过期任务", trigger: "ddlRush", count: 5 },
+            { id: 35, name: "过期补救者", desc: "完成5个已过期任务", trigger: "finishExpired", count: 5 },
+            { id: 36, name: "进度追踪者", desc: "查看进度统计20次", trigger: "viewProgress", count: 20 },
+            { id: 37, name: "四象限高手", desc: "拖动任务10次", trigger: "dragTask", count: 10 },
+            { id: 38, name: "持之以恒", desc: "使用系统30天", trigger: "use30Days", count: 30 },
+            { id: 39, name: "生日惊喜", desc: "生日当天使用系统", trigger: "birthdayUse", count: 1 },
+            { id: 40, name: "每日一句收集者", desc: "查看31天不同的每日一句", trigger: "dailyWords", count: 31 },
+            { id: 41, name: "高优先级执行者", desc: "完成20个高优先级任务", trigger: "finishHighPriority", count: 20 },
+            { id: 42, name: "中流砥柱", desc: "完成30个中优先级任务", trigger: "finishMiddlePriority", count: 30 },
+            { id: 43, name: "轻松应对", desc: "完成40个低优先级任务", trigger: "finishLowPriority", count: 40 },
+            { id: 44, name: "快速响应", desc: "添加任务后1小时内完成", trigger: "quickFinish", count: 5 },
+            { id: 45, name: "长期规划", desc: "设置超过7天的DDL任务", trigger: "longDdl", count: 10 },
+            { id: 46, name: "短期冲刺", desc: "设置少于24小时的DDL任务", trigger: "shortDdl", count: 20 },
+            { id: 47, name: "日志导出达人", desc: "连续7天导出日志", trigger: "continuousExport", count: 7 },
+            { id: 48, name: "成就解锁者", desc: "解锁10个成就", trigger: "achieve10", count: 10 },
+            { id: 49, name: "成就大师", desc: "解锁30个成就", trigger: "achieve30", count: 30 },
+            { id: 50, name: "成就收藏家", desc: "解锁50个成就", trigger: "achieve50", count: 50 },
+            { id: 51, name: "全勤奖", desc: "当月每天都添加任务", trigger: "dailyAdd", count: 1 },
+            { id: 52, name: "高效输出", desc: "一小时内完成3个任务", trigger: "hourFinish3", count: 1 },
+            { id: 53, name: "耐心十足", desc: "编辑任务描述超过100字", trigger: "longDesc", count: 1 },
+            { id: 54, name: "简洁明了", desc: "任务描述少于5个字", trigger: "shortDesc", count: 10 },
+            { id: 55, name: "猫爪爱好者", desc: "触发猫爪动画50次", trigger: "pawPrint", count: 50 },
+            { id: 56, name: "深夜工作者", desc: "夜间模式完成20个任务", trigger: "nightFinish", count: 20 },
+            { id: 57, name: "早起达人", desc: "早上6点前完成任务", trigger: "earlyFinish", count: 5 },
+            { id: 58, name: "任务整理师", desc: "每个象限都有10个任务", trigger: "balancedQuadrants", count: 1 },
+            { id: 59, name: "过期不慌", desc: "冷静填写过期任务原因", trigger: "expiredReason", count: 10 },
+            { id: 60, name: "DDL管理大师", desc: "无任务DDL过半提醒", trigger: "noHalfWarn", count: 1 },
+            { id: 61, name: "系统探索者", desc: "点击所有功能按钮", trigger: "clickAllButtons", count: 1 },
+            { id: 62, name: "数据控", desc: "查看统计数据10次", trigger: "viewStats", count: 10 },
+            { id: 63, name: "备份达人", desc: "手动导出日志20次", trigger: "manualExport", count: 20 },
+            { id: 64, name: "自动导出受益者", desc: "自动导出日志7天", trigger: "autoExport7", count: 7 },
+            { id: 65, name: "主题切换达人", desc: "一天切换主题3次", trigger: "themeChange3", count: 1 },
+            { id: 66, name: "猫猫的小跟班", desc: "连续7天查看猫猫提示", trigger: "dailyCatTips", count: 7 },
+            { id: 67, name: "鼓励收集者", desc: "收到所有完成任务的鼓励语", trigger: "collectAllMsgs", count: 6 },
+            { id: 68, name: "时间感知者", desc: "准确预估任务完成时间", trigger: "accurateTime", count: 10 },
+            { id: 69, name: "灵活变通", desc: "调整任务优先级10次", trigger: "changePriority", count: 10 },
+            { id: 70, name: "分类大师", desc: "调整任务象限20次", trigger: "changeQuadrant", count: 20 },
+            { id: 71, name: "键盘侠", desc: "输入任务总字数超过1000", trigger: "totalInput", count: 1000 },
+            { id: 72, name: "鼠标达人", desc: "点击次数超过1000次", trigger: "totalClick", count: 1000 },
+            { id: 73, name: "周末放松", desc: "周末只添加不重要不紧急任务", trigger: "weekendRelax", count: 5 },
+            { id: 74, name: "工作日高效", desc: "工作日完成50个任务", trigger: "workdayFinish", count: 50 },
+            { id: 75, name: "月度总结", desc: "完成一个月的日志记录", trigger: "monthLog", count: 1 },
+            { id: 76, name: "季度规划", desc: "设置超过90天的DDL任务", trigger: "quarterDdl", count: 5 },
+            { id: 77, name: "紧急处理", desc: "完成10个12小时内过期的任务", trigger: "urgentFinish", count: 10 },
+            { id: 78, name: "从容不迫", desc: "提前3天完成任务", trigger: "earlyFinish3", count: 5 },
+            { id: 79, name: "完美收官", desc: "年底完成所有任务", trigger: "yearFinish", count: 1 },
+            { id: 80, name: "新年新开始", desc: "新年第一天添加任务", trigger: "newYearStart", count: 1 },
+            { id: 81, name: "坚持不懈", desc: "连续30天完成至少1个任务", trigger: "30DaysFinish", count: 30 },
+            { id: 82, name: "任务清零", desc: "清空所有任务", trigger: "clearAllTasks", count: 1 },
+            { id: 83, name: "数据备份", desc: "手动备份localStorage", trigger: "backupData", count: 1 },
+            { id: 84, name: "界面爱好者", desc: "调整窗口大小10次", trigger: "resizeWindow", count: 10 },
+            { id: 85, name: "字体控", desc: "关注字体样式细节", trigger: "fontAttention", count: 1 },
+            { id: 86, name: "色彩感知者", desc: "注意到所有主题颜色变化", trigger: "colorAttention", count: 1 },
+            { id: 87, name: "动画爱好者", desc: "欣赏所有动画效果", trigger: "animationAttention", count: 1 },
+            { id: 88, name: "细节控", desc: "发现界面所有小细节", trigger: "detailAttention", count: 1 },
+            { id: 89, name: "反馈达人", desc: "提供使用反馈", trigger: "feedback", count: 1 },
+            { id: 90, name: "分享者", desc: "分享日志给他人", trigger: "shareLog", count: 1 },
+            { id: 91, name: "定制化", desc: "自定义界面样式", trigger: "customStyle", count: 1 },
+            { id: 92, name: "快捷键达人", desc: "使用键盘快捷键", trigger: "shortcut", count: 10 },
+            { id: 93, name: "多任务处理", desc: "同时处理10个任务", trigger: "multiTask", count: 10 },
+            { id: 94, name: "专注模式", desc: "一小时内只处理一个任务", trigger: "focusMode", count: 5 },
+            { id: 95, name: "复盘达人", desc: "每周回顾任务完成情况", trigger: "weeklyReview", count: 4 },
+            { id: 96, name: "目标达成", desc: "完成自定义目标", trigger: "goalAchieve", count: 1 },
+            { id: 97, name: "习惯养成", desc: "养成每日使用习惯", trigger: "dailyHabit", count: 21 },
+            { id: 98, name: "效率提升", desc: "任务完成效率提升50%", trigger: "efficiencyUp", count: 1 },
+            { id: 99, name: "时间管理大师", desc: "解锁99个成就", trigger: "achieve99", count: 99 },
+            { id: 100, name: "终极成就", desc: "解锁所有成就", trigger: "achieveAll", count: 100 }
+        ];
+
+        // 【彩蛋】日志导出猫猫低语 - 导出日志时随机显示一条
+        const CAT_LOG_WHISPERS = [
+            "猫猫偷偷告诉你：今天也超棒的哦～ฅ^•ﻌ•^ฅ",
+            "日志导出成功啦！记得好好休息😽",
+            "今天的努力猫猫都看在眼里哦✨",
+            "虽然辛苦，但你超厉害的💪",
+            "明天也要继续加油呀🥳",
+            "猫猫陪你一起记录生活📝",
+            "每一份记录都是成长的见证🌟",
+            "不要忘记奖励自己哦🍬",
+            "你真的很棒，不要怀疑🌟",
+            "慢慢来，猫猫永远陪着你🐱"
+        ];
+
+        function initDailyWords() {
+            dailyWordsList = [...CAT_DAILY_WORDS_BASE];
+            const today = new Date();
+            const dayOfMonth = today.getDate();
+            const savedShuffled = localStorage.getItem('shuffledDailyWords');
+            const savedShuffleDate = localStorage.getItem('shuffleDate');
+            
+            if (!savedShuffled || !savedShuffleDate || new Date(savedShuffleDate).getMonth() !== today.getMonth()) {
+                shuffledDailyWords = [...dailyWordsList].sort(() => Math.random() - 0.5);
+                localStorage.setItem('shuffledDailyWords', JSON.stringify(shuffledDailyWords));
+                localStorage.setItem('shuffleDate', today.toISOString());
+            } else {
+                shuffledDailyWords = JSON.parse(savedShuffled);
+            }
+            currentWordIndex = (dayOfMonth - 1) % 31;
+        }
+
+        function save() {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            localStorage.setItem('logs', JSON.stringify(logs));
+            localStorage.setItem('finishedTasks', JSON.stringify(finishedTasks));
+            localStorage.setItem('unlockedAchievements', JSON.stringify(unlockedAchievements));
+            localStorage.setItem('currentTheme', currentTheme);
+            localStorage.setItem('triggeredSlots', JSON.stringify(triggeredSlots));
+            localStorage.setItem('todayAskedNightMode', todayAskedNightMode);
+            localStorage.setItem('lastRemindHour', lastRemindHour);
+            localStorage.setItem('consecutiveDays', consecutiveDays);
+            localStorage.setItem('lastUseDate', lastUseDate);
+            localStorage.setItem('interactionCount', interactionCount);
+            localStorage.setItem('themeChangeCount', themeChangeCount);
+            localStorage.setItem('triggeredEggs', JSON.stringify(triggeredEggs));
+            localStorage.setItem('buttonClicks', JSON.stringify(buttonClicks));
+        }
+
+        function addLog(text, type="system") {
+            logs.push({
+                time: new Date().toLocaleString('zh-CN', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}),
+                text, type
+            });
+            if (logs.length>200) logs=logs.slice(-200);
+            save();
+            renderLog();
+            checkAutoExport();
+        }
+
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id==='input'){
+                renderQuadrant();
+                startRealTimeRefresh(); // 切换到首页时启动实时刷新
+            } else {
+                stopRealTimeRefresh(); // 离开首页时停止刷新，节省性能
+            }
+            if(id==='finish')renderTaskList('finish');
+            if(id==='edit')renderTaskList('edit');
+            if(id==='modify')renderTaskList('modify');
+            if(id==='log')renderLog();
+            if(id==='progress'){
+                renderProgress();
+                renderCharts();
+                unlockAchievement('viewProgress');
+            }
+            if(id==='cat')renderCatTips();
+            if(id==='achievements')renderAchievements();
+            updateActivityTime();
+        }
+
+        function checkAutoExport() {
+            const today = new Date().toDateString();
+            const lastExport = localStorage.getItem('lastLogExport');
+            if (lastExport !== today) {
+                exportLogToDesktop();
+                localStorage.setItem('lastLogExport', today);
+            }
+        }
+
+        function exportLogNow() {
+            exportLogToDesktop();
+            alert('日志导出成功啦😽，人也要记得好好休息哦～');
+        }
+
+        function exportLogToDesktop() {
+            const dateStr = new Date().toLocaleDateString('zh-CN').replace(/\//g,'-');
+            const filename = `猫猫工作日志_${dateStr}.txt`;
+            let content = `=== 猫猫工作日志 ${dateStr} ===\n\n`;
+            logs.forEach(log=>{
+                content += `[${log.time}] ${log.text}\n`;
+            });
+            const whisper = CAT_LOG_WHISPERS[Math.floor(Math.random() * CAT_LOG_WHISPERS.length)];
+            content += `\n🐱 ${whisper}\n`;
+            const blob = new Blob([content], {type:'text/plain'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 【功能】导出指定日期范围的日志
+        function exportLogRange() {
+            const startDateStr = document.getElementById('logStartDate').value;
+            const endDateStr = document.getElementById('logEndDate').value;
+
+            if (!startDateStr || !endDateStr) {
+                alert('请选择开始日期和结束日期哦😺');
+                return;
+            }
+
+            const startDate = new Date(startDateStr);
+            const endDate = new Date(endDateStr);
+            endDate.setHours(23, 59, 59, 999); // 包含结束日期的整天
+
+            if (startDate > endDate) {
+                alert('开始日期不能晚于结束日期哦😺');
+                return;
+            }
+
+            const filteredLogs = logs.filter(log => {
+                const logDate = new Date(log.time);
+                return logDate >= startDate && logDate <= endDate;
+            });
+
+            if (filteredLogs.length === 0) {
+                alert('这个日期范围内没有日志哦😺');
+                return;
+            }
+
+            const filename = `猫猫工作日志_${startDateStr}_至_${endDateStr}.txt`;
+            let content = `=== 猫猫工作日志 ${startDateStr} 至 ${endDateStr} ===\n`;
+            content += `（共 ${filteredLogs.length} 条记录）\n\n`;
+            filteredLogs.forEach(log=>{
+                content += `[${log.time}] ${log.text}\n`;
+            });
+            const whisper = CAT_LOG_WHISPERS[Math.floor(Math.random() * CAT_LOG_WHISPERS.length)];
+            content += `\n🐱 ${whisper}\n`;
+            const blob = new Blob([content], {type:'text/plain'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 【功能】清空所有日志（两次确认）
+        function confirmClearLogs() {
+            if (logs.length === 0) {
+                alert('日志本来就是空的哦😺');
+                return;
+            }
+            const firstConfirm = confirm(`确定要清空所有日志吗？\n\n这将删除全部 ${logs.length} 条日志，且无法恢复！\n\n第一次确认：点击"确定"继续`);
+            if (!firstConfirm) {
+                return;
+            }
+            const secondConfirm = confirm(`最后一次确认！\n\n真的要删除全部 ${logs.length} 条日志吗？\n\n此操作不可逆！`);
+            if (secondConfirm) {
+                logs = [];
+                save();
+                renderLog();
+                alert('所有日志已清空📝，猫猫帮你处理好了～');
+            }
+        }
+
+        function getTimeDiff(ddl) {
+            const now = new Date().getTime();
+            const end = new Date(ddl).getTime();
+            return {
+                total: end-now,
+                days: Math.floor((end-now)/(86400000)),
+                hours: Math.floor(((end-now)%86400000)/3600000),
+                minutes: Math.floor(((end-now)%3600000)/60000),
+                seconds: Math.floor(((end-now)%60000)/1000)
+            };
+        }
+
+        function getDdlProgress(create, ddl) {
+            const c = new Date(create).getTime();
+            const e = new Date(ddl).getTime();
+            const n = new Date().getTime();
+            if(n>=e)return 100;
+            if(n<=c)return 0;
+            return ((n-c)/(e-c))*100;
+        }
+
+        // 【彩蛋】生日彩蛋 - 生日当天触发，显示生日横幅+烟花+生日信，生日当天最多触发2次
+        function checkBirthday() {
+            const today = new Date();
+            const todayMonth = today.getMonth();
+            const todayDay = today.getDate();
+            const todayStr = `${today.getFullYear()}-${todayMonth}-${todayDay}`;
+            const el = document.getElementById('birthdayWarn');
+            
+            // 检查是否是生日当天（临时改为今天展示）
+            const isBirthday = todayMonth === BIRTHDAY_MONTH && todayDay === BIRTHDAY_DAY;
+            const forceShowToday = true; // 强制今天展示生日彩蛋
+            if (isBirthday || forceShowToday) {
+                // 【功能】生日当天横幅文案
+                el.innerHTML="🎂 生日快乐呀🍰，恭喜人又长大一岁啦✌︎' ֊'，要天天开心哦🥺";
+                el.style.display="block";
+
+                // 今天无限次触发
+                triggerBirthdaySurprise();
+            } else {
+                // 计算距离生日的天数
+                const birthday = new Date(today.getFullYear(), BIRTHDAY_MONTH, BIRTHDAY_DAY);
+                if(today > birthday) birthday.setFullYear(today.getFullYear() + 1);
+                const diff = Math.ceil((birthday - today) / (86400000));
+                if(diff <= 7) {
+                    // 【功能】距离生日7天内显示倒计时横幅文案
+                    el.innerHTML=`🎂 距离人的生日还有${diff}天哦！`;
+                    el.style.display="block";
+                } else {
+                    el.style.display="none";
+                }
+            }
+        }
+
+        // 【彩蛋】生日惊喜烟花+信件内容
+        function triggerBirthdaySurprise() {
+            createFireworks();
+            setTimeout(() => {
+                // 设置标记，用于关闭后弹出第二封信
+                window.birthdayEggShown = true;
+                // 【彩蛋】生日信件内容
+                const birthdayLetter = `
+                🎂 生日快乐！🎂
+                
+                亲爱的人：
+                
+                今天是你的生日，猫猫祝你生日快乐呀🥳
+                愿你每天都开开心心，所有的愿望都能实现✨
+                感谢你一直以来的努力和坚持，你真的超棒的！
+                新的一岁，继续闪闪发光吧🌟
+                猫猫知道生活充满不确定性。
+                给人看猫猫很喜欢的一段心里独白，
+                
+                """
+                和你在一起之后，我就像很多人一样，
+                脑子里总是冒出永远这个词，
+                想永远被你喜欢，永远和你在一起。
+                可永远不是一个时间单位，
+                找不到任何算法去度量和计算，
+                这样含糊不精确的表达，我无法理解。
+                后来，某一天，我忽然想到，
+                既然每个人都选择取永远的极限值为无穷大，
+                那么我可以不可以把它取作无穷小呢。
+                取作无穷小，永远就变成了瞬间，所以……
+                在这一个瞬间，我是拥有你的。
+                这就等同于永远了。
+                下个瞬间，也请你爱上我。
+                """
+
+                其实写到这里就很哭，
+                猫猫想起来有一天晚上打电话。
+                你问我为什么要把彩蛋设那么久，
+                我就那么笃定我们这份情谊会一直走下去吗?
+                我不敢轻易给你未来的承诺，
+                我怕你觉得轻浮。
+                我说我想要SP，除了自我发展的需要，
+                我也想过如果我够强，
+                我们的未来重合度就会大一些了吧。
+                至少现在的你拥有我，这是完完全全可以肯定的。
+                而下一个瞬间，我也会选择陪着你。
+                喜欢真的是一件很不讲道理的事情，
+                希望你开心幸福顺遂。
+                生日快乐🎂
+                
+                —— 永远陪着你的猫猫 🐱
+                `;
+                // 直接显示生日信，不使用triggerEgg，确保每次都能看到
+                showEggModal('🎂 生日惊喜！', birthdayLetter);
+                // 解锁成就
+                unlockAchievement('birthdayUse');
+                // 记录生日彩蛋触发
+                if (!triggeredEggs.includes('birthday')) {
+                    triggeredEggs.push('birthday');
+                    save();
+                }
+            }, 2000);
+        }
+
+        function createFireworks() {
+            const container = document.getElementById('fireworksContainer');
+            container.innerHTML = '';
+            fireworksActive = true; // 标记烟花开始播放
+            // 持续创建烟花，直到用户关闭信件才停止
+            const totalFireworks = 10000; // 大量烟花
+            const interval = 10; // 每10毫秒创建一批烟花
+            const fireworksPerBatch = 15; // 每批15个烟花
+
+            let createdFireworks = 0;
+            const fireworkInterval = setInterval(() => {
+                if (createdFireworks >= totalFireworks || !fireworksActive) {
+                    clearInterval(fireworkInterval);
+                    return;
+                }
+
+                for (let i = 0; i < fireworksPerBatch && createdFireworks < totalFireworks; i++) {
+                    const firework = document.createElement('div');
+                    firework.className = 'firework';
+                    const colors = ['#ff6b9d', '#ff85c0', '#3498db', '#17a2b8', '#ffc107', '#dc3545', '#28a745'];
+                    firework.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    const x = Math.random() * 100;
+                    const y = Math.random() * 100;
+                    const tx = (Math.random() - 0.5) * 250;
+                    const ty = (Math.random() - 0.5) * 250;
+                    firework.style.left = `${x}%`;
+                    firework.style.top = `${y}%`;
+                    firework.style.setProperty('--tx', `${tx}px`);
+                    firework.style.setProperty('--ty', `${ty}px`);
+                    container.appendChild(firework);
+                    createdFireworks++;
+                }
+            }, interval);
+        }
+
+        // DDL 提醒 + 猫爪滚动条
+        function checkDdlWarn() {
+            const warn = [];
+            const expiredTasks = [];
+            tasks.forEach((t, i) => {
+                const diff = getTimeDiff(t.ddl);
+                const progress = getDdlProgress(t.createTime, t.ddl);
+                if (progress >= 50 && progress < 100 && !t.halfWarned) {
+                    warn.push(`<div class="warn yellow">【DDL过半】${t.content}（已过${Math.round(progress)}%）</div>`);
+                    t.halfWarned = true;
+                    addLog(`【DDL过半提醒】${t.content}`);
+                }
+                if (diff.total <= 0) {
+                    const ex = Math.abs(diff.total);
+                    const ed = Math.floor(ex / 86400000);
+                    const eh = Math.floor((ex % 86400000) / 3600000);
+                    const em = Math.floor((ex % 3600000) / 60000);
+                    const es = Math.floor((ex % 60000) / 1000);
+                    warn.push(`<div class="warn red">【已过期】${t.content}（${ed}天${eh}时${em}分${es}秒）</div>`);
+                    expiredTasks.push({ index: i, task: t });
+                } else if (diff.total <= 12 * 3600000) {
+                    warn.push(`<div class="warn red">【仅剩 <12小时】${t.content}（${diff.hours}时${diff.minutes}分${diff.seconds}秒）</div>`);
+                } else if (diff.days === 0) {
+                    warn.push(`<div class="warn red">【仅剩1天内】${t.content}</div>`);
+                } else if (diff.days === 1) {
+                    warn.push(`<div class="warn red">【仅剩1天】${t.content}</div>`);
+                } else if (diff.days === 2) {
+                    warn.push(`<div class="warn orange">【仅剩2天】${t.content}</div>`);
+                } else if (diff.days === 3) {
+                    warn.push(`<div class="warn yellow">【仅剩3天】${t.content}</div>`);
+                }
+            });
+            const displayWarn = warn;
+            if (warn.length > 3) {
+                displayWarn.unshift(`<div style="text-align:center; color:#888; font-size:12px;">💡 右侧猫爪条可下滑查看全部 ${warn.length} 条提醒</div>`);
+            }
+            document.getElementById('warnArea').innerHTML = displayWarn.join('');
+
+            expiredTasks.forEach(({ index, task }) => {
+                if (!task.reasonRecorded) {
+                    alert("没关系啦，猫猫原谅你，下次加油～🐱");
+                    const reason = prompt(`任务【${task.content}】已过期，请说明原因：`);
+                    if (reason) {
+                        addLog(`【过期原因】${task.content}：${reason}`);
+                        task.reasonRecorded = true;
+                        save();
+                    }
+                }
+            });
+        }
+
+        function startTaskInput() {
+            inputStep=0; tempTask={}; openModal(); updateModalContent();
+            updateActivityTime();
+        }
+
+        function updateModalContent() {
+            const t = document.getElementById('modalTitle');
+            const c = document.getElementById('modalContent');
+            if(inputStep===0){
+                t.innerText="选择任务类型";
+                c.innerHTML=`请输入数字：
+1-重要但不紧急 
+2-紧急但不重要  
+3-重要且紧急  
+4-不重要不紧急`;
+            }else if(inputStep===1){
+                t.innerText="输入任务内容";
+                c.innerHTML="请输入任务详情";
+            }else if(inputStep===2){
+                t.innerText="选择优先级";
+                c.innerHTML=`请输入：high-高  middle-中  low-低`;
+            }else if(inputStep===3){
+                t.innerText="设置DDL（精确到秒）";
+                c.innerHTML=`<input type="datetime-local" id="p" onchange="document.getElementById('modalInput').value=this.value">`;
+            }
+        }
+
+        // ========== 「猫猫」关键词专属彩蛋 ==========
+        function submitModalInput() {
+            const v = document.getElementById('modalInput').value.trim();
+            if(v.toLowerCase()==='q'){closeModal();alert('已退出哦😺');return;}
+            
+            // 输错猫猫软萌提示
+            if(inputStep===0){
+                const map={1:'2',2:'3',3:'1',4:'4'};
+                if(!map[v]){alert("哎呀人～要输入1-4的数字哦🐱");return;}
+                tempTask.type=map[v]; inputStep=1;
+            }else if(inputStep===1){
+                if(!v){alert("人要输入任务内容哦，不然猫猫记不住哒😺");return;}
+                // 输入「猫猫」触发专属可爱回应
+                if(v.trim() === '猫猫'){
+                    alert("猫猫收到！这是最重要的任务！ฅ•ω•ฅ");
+                    // 【彩蛋】猫猫关键词彩蛋 - 输入"猫猫"时触发
+                    triggerEgg('catKeyword', '🐱 猫猫关键词彩蛋', '人提到了猫猫！这是最重要的任务～');
+                }
+                tempTask.content=v; inputStep=2;
+            }else if(inputStep===2){
+                if(!['high','middle','low'].includes(v)){alert("人要输入high/middle/low哦，猫猫看不懂别的哒🥺");return;}
+                tempTask.priority=v; inputStep=3;
+            }else if(inputStep===3){
+                if(!v){alert("人要选一个DDL哦，不然猫猫没法提醒你啦😿");return;}
+                tempTask.ddl=v;
+                tempTask.createTime=new Date().toISOString();
+                tempTask.halfWarned=false;
+                tempTask.reasonRecorded=false;
+                tasks.push(tempTask);
+                addLog(`新增任务：${tempTask.content} | 优先级：${tempTask.priority}`);
+                save(); 
+                renderQuadrant();
+                closeModal();
+                // 添加任务成功的拟猫化随机回复
+                const successMsg = ADD_TASK_SUCCESS[Math.floor(Math.random() * ADD_TASK_SUCCESS.length)];
+                alert(successMsg);
+                // 检查任务相关彩蛋
+                checkTaskCategoryEgg();
+                checkPriorityEgg();
+                startRealTimeRefresh(); // 新增任务后重启实时刷新
+            }
+            document.getElementById('modalInput').value='';
+            updateModalContent();
+        }
+
+        function checkBalancedQuadrants() {
+            const q1 = tasks.filter(t => t.type === '1').length;
+            const q2 = tasks.filter(t => t.type === '2').length;
+            const q3 = tasks.filter(t => t.type === '3').length;
+            const q4 = tasks.filter(t => t.type === '4').length;
+            if (q1 >= 10 && q2 >= 10 && q3 >= 10 && q4 >= 10) {
+                unlockAchievement('balancedQuadrants');
+            }
+        }
+
+        // ========== 修复核心bug：优先级class渲染错误，导致按钮点击失效 ==========
+        function renderQuadrant() {
+            const q={1:[],2:[],3:[],4:[]};
+            tasks.forEach((t,i)=>{
+                t.index=i;
+                q[t.type].push(t);
+            });
+            let html='';
+            html+=`<div class="quadrant q2" data-type="2"><h3>🔵重要但不紧急</h3><div class="task-list-wrapper">${renderItems(q[2])}</div></div>`;
+            html+=`<div class="quadrant q3" data-type="3"><h3>🟡紧急但不重要</h3><div class="task-list-wrapper">${renderItems(q[3])}</div></div>`;
+            html+=`<div class="quadrant q1" data-type="1"><h3>🔴重要且紧急</h3><div class="task-list-wrapper">${renderItems(q[1])}</div></div>`;
+            html+=`<div class="quadrant q4" data-type="4"><h3>⚫不重要不紧急</h3><div class="task-list-wrapper">${renderItems(q[4])}</div></div>`;
+            document.getElementById('quadrant').innerHTML=html;
+        }
+
+        function renderItems(list) {
+            if(list.length===0)return '<p>暂无任务</p>';
+            return list.map((t)=>{
+                const d=getTimeDiff(t.ddl);
+                const p=getDdlProgress(t.createTime,t.ddl);
+                const pc = d.total<=0?'#dc3545':p>=90?'#dc3545':p>=70?'#ffc107':p>=50?'#fd7e14':'#28a745';
+                const pText = t.priority==='high'?'高':t.priority==='middle'?'中':'低';
+                // 修复之前的bug：三元表达式错误，导致class渲染异常
+                const pCls = t.priority==='high'?'p-high':t.priority==='middle'?'p-middle':'p-low';
+                // 给进度条和时间信息添加唯一ID，用于实时刷新
+                return `
+                <div class="task-item" draggable="true" data-index="${t.index}" 
+                ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="drop(event)">
+                    <div><span class="priority-badge ${pCls}">${pText}</span> ${t.content}</div>
+                    <div class="progress-bar"><div class="progress-fill" id="progress-fill-${t.index}" style="width:${p}%;background:${pc}"></div></div>
+                    <div class="time-info" id="time-info-${t.index}">DDL:${t.ddl}<br>剩余${d.days}天${d.hours}时${d.minutes}分${d.seconds}秒</div>
+                </div>`;
+            }).join('');
+        }
+
+        // ========== DDL时间&进度条实时刷新函数 ==========
+        function refreshRealTimeInfo() {
+            // 没有任务就不执行
+            if (tasks.length === 0) return;
+            // 不在首页就不执行
+            if (!document.getElementById('input').classList.contains('active')) return;
+
+            tasks.forEach((t, index) => {
+                const timeEl = document.getElementById(`time-info-${index}`);
+                const progressEl = document.getElementById(`progress-fill-${index}`);
+                
+                // 元素不存在就跳过
+                if (!timeEl || !progressEl) return;
+
+                // 重新计算剩余时间和进度
+                const d = getTimeDiff(t.ddl);
+                const p = getDdlProgress(t.createTime, t.ddl);
+                const pc = d.total<=0?'#dc3545':p>=90?'#dc3545':p>=70?'#ffc107':p>=50?'#fd7e14':'#28a745';
+
+                // 更新时间文本（秒级实时变化）
+                timeEl.innerHTML = `DDL:${t.ddl}<br>剩余${d.days}天${d.hours}时${d.minutes}分${d.seconds}秒`;
+                // 更新进度条宽度和颜色
+                progressEl.style.width = `${p}%`;
+                progressEl.style.background = pc;
+            });
+        }
+
+        // 启动实时刷新（每秒1次）
+        function startRealTimeRefresh() {
+            stopRealTimeRefresh(); // 先停止之前的定时器，避免重复
+            realTimeTimer = setInterval(refreshRealTimeInfo, 1000);
+        }
+
+        // 停止实时刷新，节省性能
+        function stopRealTimeRefresh() {
+            if (realTimeTimer) {
+                clearInterval(realTimeTimer);
+                realTimeTimer = null;
+            }
+        }
+
+        // 页面隐藏时停止刷新，显示时恢复，优化性能
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                stopRealTimeRefresh();
+            } else {
+                if (document.getElementById('input').classList.contains('active')) {
+                    startRealTimeRefresh();
+                }
+            }
+        });
+
+        function dragStart(e) {
+            draggedTaskIndex = parseInt(e.target.getAttribute('data-index'));
+            updateActivityTime();
+        }
+        function dragOver(e) { e.preventDefault(); }
+        function drop(e) {
+            e.preventDefault();
+            const quadrantEl = e.target.closest('.quadrant');
+            if(!quadrantEl)return;
+            const targetType = quadrantEl.getAttribute('data-type');
+            const draggedTask = tasks[draggedTaskIndex];
+            if(!draggedTask)return;
+            tasks.splice(draggedTaskIndex, 1);
+            draggedTask.type = targetType;
+            tasks.push(draggedTask);
+            tasks.forEach((t,i)=>t.index=i);
+            save();
+            renderQuadrant();
+        }
+
+        // 精准猫爪印
+        document.addEventListener('click', function(e) {
+            const quadrant = document.getElementById('quadrant');
+            if (!quadrant.contains(e.target)) return;
+            
+            const paw = document.createElement('div');
+            paw.className = 'paw-print';
+            paw.textContent = '🐾';
+            
+            paw.style.left = `${e.clientX - 12}px`;
+            paw.style.top = `${e.clientY - 12}px`;
+            
+            const x = (Math.random() - 0.5) * 20;
+            const y = (Math.random() - 0.5) * 20;
+            const rotate = Math.random() * 20;
+            paw.style.setProperty('--x', `${x}px`);
+            paw.style.setProperty('--y', `${y}px`);
+            paw.style.setProperty('--rotate', `${rotate}deg`);
+            
+            document.body.appendChild(paw);
+            setTimeout(() => paw.remove(), 1500);
+        });
+
+        function renderCharts() {
+            if(chart1) chart1.destroy();
+            if(chart2) chart2.destroy();
+
+            const ctx1 = document.getElementById('progressChart').getContext('2d');
+            const q1Count = tasks.filter(t => t.type === '1').length;
+            const q2Count = tasks.filter(t => t.type === '2').length;
+            const q3Count = tasks.filter(t => t.type === '3').length;
+            const q4Count = tasks.filter(t => t.type === '4').length;
+
+            chart1 = new Chart(ctx1, {
+                type: 'pie',
+                data: {
+                    labels: ['重要且紧急', '重要但不紧急', '紧急但不重要', '不重要不紧急'],
+                    datasets: [{
+                        data: [q1Count, q2Count, q3Count, q4Count],
+                        backgroundColor: ['#dc3545', '#17a2b8', '#ffc107', '#6c757d']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: true, text: '任务象限分布' }
+                    }
+                }
+            });
+
+            const ctx2 = document.getElementById('ddlProgressChart').getContext('2d');
+            const expired = tasks.filter(t => getTimeDiff(t.ddl).total <= 0).length;
+            const urgent12h = tasks.filter(t => {
+                const d = getTimeDiff(t.ddl);
+                return d.total > 0 && d.total <= 12 * 3600000;
+            }).length;
+            const urgent1d = tasks.filter(t => {
+                const d = getTimeDiff(t.ddl);
+                return d.days === 0 && d.total > 0;
+            }).length;
+            const normal = tasks.filter(t => {
+                const d = getTimeDiff(t.ddl);
+                return d.days >= 1 && d.days <= 3;
+            }).length;
+            const safe = tasks.filter(t => {
+                const d = getTimeDiff(t.ddl);
+                return d.days > 3;
+            }).length;
+
+            chart2 = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: ['已过期', '12小时内', '1天内', '1-3天', '3天以上'],
+                    datasets: [{
+                        label: '任务数量',
+                        data: [expired, urgent12h, urgent1d, normal, safe],
+                        backgroundColor: ['#dc3545', '#fd7e14', '#ffc107', '#3498db', '#28a745']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: 'DDL紧急程度分布' }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { precision: 0 } }
+                    }
+                }
+            });
+        }
+
+        function renderProgress() {
+            const total = tasks.length;
+            const expired = tasks.filter(t=>getTimeDiff(t.ddl).total<=0).length;
+            const half = tasks.filter(t=>t.halfWarned).length;
+            const urgent12 = tasks.filter(t=>{
+                const d=getTimeDiff(t.ddl);
+                return d.total>0&&d.total<=12*3600000;
+            }).length;
+            const urgent1 = tasks.filter(t=>{
+                const d=getTimeDiff(t.ddl);
+                return d.days===0&&d.total>0;
+            }).length;
+            const urgent2 = tasks.filter(t=>{
+                const d=getTimeDiff(t.ddl);
+                return d.days === 1;
+            }).length;
+            const urgent3 = tasks.filter(t=>{
+                const d=getTimeDiff(t.ddl);
+                return d.days === 2;
+            }).length;
+            document.getElementById('progressStats').innerHTML=`
+                <p>总任务：${total}</p>
+                <p>已过期：${expired}</p>
+                <p>DDL过半：${half}</p>
+                <p>12小时内：${urgent12}</p>
+                <p>1天内：${urgent1}</p>
+                <p>剩余2天：${urgent2}</p>
+                <p>剩余3天：${urgent3}</p>
+            `;
+        }
+
+        function renderCatTips() {
+            const tip = CAT_NORMAL_TIPS[Math.floor(Math.random()*CAT_NORMAL_TIPS.length)];
+            document.getElementById('catTipsContent').innerHTML=`<p>${tip}</p>`;
+            const word = shuffledDailyWords[currentWordIndex];
+            document.getElementById('dailyWords').innerText = `💌：${word}`;
+        }
+
+        function renderAchievements() {
+            const list = document.getElementById('achievementsList');
+            if (unlockedAchievements.length === 0) {
+                list.innerHTML = '<p>暂无解锁的成就哦，快去完成任务吧～ฅ^•ﻌ•^ฅ</p>';
+                return;
+            }
+            const unlocked = ACHIEVEMENTS_LIST.filter(a => unlockedAchievements.includes(a.id));
+            list.innerHTML = unlocked.map(a => `
+                <div class="achievement-item">
+                    <strong>🏆 ${a.name}</strong><br>
+                    ${a.desc}
+                </div>
+            `).join('');
+        }
+
+        function unlockAchievement(trigger) {
+            const achievements = ACHIEVEMENTS_LIST.filter(a => a.trigger === trigger);
+            achievements.forEach(a => {
+                if (!unlockedAchievements.includes(a.id)) {
+                    // 检查计数要求
+                    let shouldUnlock = true;
+                    if (a.count > 1) {
+                        switch (a.trigger) {
+                            case 'finish':
+                                shouldUnlock = finishedTasks.length >= a.count;
+                                break;
+                            case 'add':
+                                shouldUnlock = (tasks.length + finishedTasks.length) >= a.count;
+                                break;
+                            case 'continuousUse':
+                                shouldUnlock = consecutiveDays >= a.count;
+                                break;
+                            case 'catBtnClick':
+                                shouldUnlock = catBtnClickCount >= a.count;
+                                break;
+                            case 'nightModeUse':
+                                shouldUnlock = themeChangeCount >= a.count;
+                                break;
+                            case 'viewProgress':
+                                shouldUnlock = buttonClicks['progress'] >= a.count;
+                                break;
+                            case 'dragTask':
+                                shouldUnlock = buttonClicks['drag'] >= a.count;
+                                break;
+                        }
+                    }
+                    if (shouldUnlock) {
+                        unlockedAchievements.push(a.id);
+                        save();
+                        renderAchievements();
+                        showEggModal("🎉 成就解锁！", `你获得了新成就：${a.name}\n${a.desc}`);
+                    }
+                }
+            });
+        }
+
+        function countCatBtnClick() {
+            catBtnClickCount++;
+            if (catBtnClickCount === 5) {
+                // 【彩蛋】猫猫按钮点击5次隐藏彩蛋 - 点击猫猫按钮5次时触发
+                triggerEgg('catButton5', '🐱 隐藏彩蛋！', '猫猫偷偷出现！你发现隐藏彩蛋啦～ฅ՞•ﻌ•՞ฅ');
+                catBtnClickCount = 0;
+                unlockAchievement('catBtnClick');
+            }
+        }
+
+        function showEggModal(title, content) {
+            document.getElementById('eggTitle').innerText = title;
+            document.getElementById('eggContent').innerText = content;
+            document.getElementById('eggModal').style.display = 'block';
+        }
+
+        function closeEggModal() {
+            document.getElementById('eggModal').style.display = 'none';
+            // 如果烟花还在播放，延迟2秒后清除
+            if (fireworksActive) {
+                setTimeout(() => {
+                    const container = document.getElementById('fireworksContainer');
+                    container.innerHTML = '';
+                    fireworksActive = false;
+                }, 2000);
+            }
+            
+            // 生日彩蛋关闭后弹出新的信
+            if (window.birthdayEggShown) {
+                window.birthdayEggShown = false;
+                window.secondLetterShown = true;
+                setTimeout(() => {
+                    const secondLetter = `
+                    你好呀，现在是2026/5/15
+                    我现在回去看生日彩蛋还是有点想哭。。。
+                    其实是爱哭鬼来的。
+                    好吧，打这行字的时候就好想哭啊。
+                    首先恭喜你发现这个好久以后才出现的彩蛋。
+                    想说的话好多啊，不知道从何说起，
+                    好像写在这里太不正式，
+                    决定写到给你的日记本里。
+                    喜欢你。
+                    天天开心。
+                    `;
+                    showEggModal('', secondLetter);
+                }, 500);
+            } else if (window.secondLetterShown) {
+                // 第二封信关闭后打开PDF文档
+                window.secondLetterShown = false;
+                setTimeout(() => {
+                    window.open('猫猫四象限待办系统 全量彩蛋终极完整版整理.pdf', '_blank');
+                }, 500);
+            }
+        }
+
+        function openModal() {
+            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById('promptModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+            document.getElementById('promptModal').style.display = 'none';
+        }
+
+        function updateActivityTime() {
+            lastActivityTime = new Date();
+            resetIdleTimer();
+        }
+
+        // 【彩蛋】摸鱼提醒 - 30分钟无操作时触发
+        function resetIdleTimer() {
+            clearTimeout(idleTimer);
+            // 增加交互次数
+            interactionCount++;
+            // 检查交互次数彩蛋
+            checkInteractionEgg();
+            // 30分钟 = 30 * 60 * 1000 = 1800000毫秒
+            idleTimer = setTimeout(() => {
+                showEggModal("🐾 摸鱼提醒", "人在摸鱼吗？快回来干活～🐾");
+                unlockAchievement('idleWarn');
+            }, 1800000);
+        }
+
+        // ========== 修复：深夜陪伴提示不管拒绝与否都弹出 ==========
+        function checkTimeGreetings() {
+            const now = new Date();
+            const h = now.getHours();
+            const m = now.getMinutes();
+            const currentTimeNum = h + m/60; // 把时间转成数字，方便判断区间
+
+            // 1. 时间段提示语，当天同个时间段只弹一次
+            for (const [slotKey, slotInfo] of Object.entries(TIME_GREETINGS)) {
+                const [start, end] = slotInfo.time;
+                // 判断当前时间在区间内，且当天没触发过
+                if (currentTimeNum >= start && currentTimeNum < end && !triggeredSlots.includes(slotKey)) {
+                    alert(slotInfo.text);
+                    triggeredSlots.push(slotKey);
+                    save();
+                    break;
+                }
+            }
+
+            // 2. 深夜模式：不管同意还是拒绝，都弹出猫猫陪你熬夜
+            if ((h >= 23 || h < 8) && !document.body.classList.contains('night-mode') && todayAskedNightMode !== todayDate) {
+                todayAskedNightMode = todayDate;
+                save();
+                const ok = confirm("🌙 现在很晚啦～猫猫怕你累眼睛，要开启深夜模式吗？");
+                // 不管选什么，都先弹陪伴提示
+                alert("好哒～猫猫陪你熬夜哦😼，但也要记得时不时眨眨眼睛，别太累啦🥺");
+                if (ok) {
+                    document.body.classList.add('night-mode');
+                    alert("深夜模式开启啦😴，猫猫帮你把光线调柔和啦，要早点休息哦");
+                    // 【彩蛋】深夜模式彩蛋 - 开启深夜模式时触发
+                    triggerEgg('nightMode', '🌙 深夜模式开启', '猫猫帮你把光线调柔和啦，要早点休息哦～');
+                    unlockAchievement('nightModeUse');
+                }
+            }
+            // 【功能】8:00 自动退出深夜模式
+            if (h === 8 && document.body.classList.contains('night-mode')) {
+                document.body.classList.remove('night-mode');
+                alert("☀️ 早上好呀！深夜模式已自动退出啦～");
+            }
+
+            // 【彩蛋】整点提醒 - 每个整点触发一次，提醒休息喝水远眺
+            if (m === 0 && h !== lastRemindHour) {
+                lastRemindHour = h;
+                save();
+                alert("整点啦～该站起来走走，远眺一下远方，记得喝口水哦🥤🐾");
+            }
+        }
+
+        // ========== 全场景个性化猫猫回复 ==========
+        // 1. 标记完成（清除任务）
+        function finishTask() {
+            updateActivityTime();
+            const input = document.getElementById('finishInput').value.trim();
+            if (input.toLowerCase() === 'q') {
+                alert('已退出哦😺');
+                document.getElementById('finishInput').value = '';
+                return;
+            }
+            const index = parseInt(input);
+            if (isNaN(index)) {
+                alert('要输入数字序号哦，猫猫看不懂别的哒😺');
+                return;
+            }
+            if (index < 0 || index >= tasks.length) {
+                alert('哎呀人，这个序号不对哦，要输入列表里有的数字呀🐾');
+                return;
+            }
+            const finishedTask = tasks.splice(index, 1)[0];
+            finishedTasks.push(finishedTask);
+            tasks.forEach((t, i) => t.index = i);
+            save();
+            renderTaskList('finish');
+            renderQuadrant();
+            const encourage = FINISH_ENCOURAGE[Math.floor(Math.random() * FINISH_ENCOURAGE.length)];
+            alert(encourage);
+            addLog(`完成任务：${finishedTask.content}`);
+            document.getElementById('finishInput').value = '';
+            // 检查任务完成相关彩蛋
+            checkTimeMasterEgg();
+            checkTaskCategoryEgg();
+            checkPriorityEgg();
+            startRealTimeRefresh(); // 完成任务后重启实时刷新
+        }
+
+        // 2. 修改DDL
+        function editTaskDdl() {
+            updateActivityTime();
+            const indexInput = document.getElementById('editIndex').value.trim();
+            const newDdl = document.getElementById('newDdl').value;
+            const index = parseInt(indexInput);
+            if (isNaN(index)) {
+                alert('人要输入数字序号哦，猫猫看不懂别的哒😺');
+                return;
+            }
+            if (index < 0 || index >= tasks.length) {
+                alert('哎呀人，这个序号不对哦，要输入列表里有的数字呀🐾');
+                return;
+            }
+            if (!newDdl) {
+                alert('人要选一个新的DDL哦，不然猫猫没法提醒你啦😿');
+                return;
+            }
+            const oldDdl = tasks[index].ddl;
+            tasks[index].ddl = newDdl;
+            tasks[index].halfWarned = false;
+            save();
+            renderTaskList('edit');
+            renderQuadrant();
+            alert('DDL修改好啦😽，猫猫会帮你盯着新的截止时间哦～');
+            addLog(`修改DDL：${tasks[index].content} 从 ${oldDdl} 改为 ${newDdl}`);
+            document.getElementById('editIndex').value = '';
+            document.getElementById('newDdl').value = '';
+            startRealTimeRefresh(); // 修改DDL后重启实时刷新
+        }
+
+        // 3. 修改任务内容/类型/优先级
+        function modifyTask() {
+            updateActivityTime();
+            const indexInput = document.getElementById('modifyIndex').value.trim();
+            const newContent = document.getElementById('modifyContent').value.trim();
+            const newType = document.getElementById('modifyType').value;
+            const newPriority = document.getElementById('modifyPriority').value;
+            const index = parseInt(indexInput);
+            if (isNaN(index)) {
+                alert('人要输入数字序号哦，猫猫看不懂别的哒😺');
+                return;
+            }
+            if (index < 0 || index >= tasks.length) {
+                alert('哎呀人，这个序号不对哦，要输入列表里有的数字呀🐾');
+                return;
+            }
+            const oldContent = tasks[index].content;
+            if (newContent) tasks[index].content = newContent;
+            tasks[index].type = newType;
+            tasks[index].priority = newPriority;
+            tasks.forEach((t, i) => t.index = i);
+            save();
+            renderTaskList('modify');
+            renderQuadrant();
+            alert('任务修改完成啦✨，猫猫已经帮你更新好啦～');
+            addLog(`修改任务：${oldContent} → ${tasks[index].content} | 类型：${newType} | 优先级：${newPriority}`);
+            document.getElementById('modifyIndex').value = '';
+            document.getElementById('modifyContent').value = '';
+            startRealTimeRefresh(); // 修改任务后重启实时刷新
+        }
+
+        // 4. 手动添加日志
+        function addManualLog() {
+            updateActivityTime();
+            const content = document.getElementById('manualLogContent').value.trim();
+            if (!content) {
+                alert('日志内容不能为空哦😺');
+                return;
+            }
+            addLog(content, 'manual');
+            alert('日志添加好啦📝，猫猫帮你好好收着哦～');
+            document.getElementById('manualLogContent').value = '';
+            // 检查日志相关彩蛋
+            checkLogEgg();
+        }
+
+        // ========== 展开/收起函数 ==========
+        function toggleFinishList() {
+            const list = document.getElementById('taskListFinish');
+            list.style.display = list.style.display === 'block' ? 'none' : 'block';
+        }
+        function toggleEditTextList() {
+            const list = document.getElementById('taskListEdit');
+            list.style.display = list.style.display === 'block' ? 'none' : 'block';
+        }
+        function toggleModifyList() {
+            const list = document.getElementById('taskListModify');
+            if (list.style.display === 'block') {
+                list.style.display = 'none';
+            } else {
+                list.style.display = 'block';
+                // 强制渲染任务列表
+                renderTaskList('modify');
+            }
+        }
+
+        // ========== 任务列表渲染 ==========
+        function renderTaskList(section) {
+            let html = '';
+            if (tasks.length === 0) {
+                html = '<p>暂无任务</p>';
+                document.getElementById(`taskList${section.charAt(0).toUpperCase() + section.slice(1)}`).innerHTML = html;
+                return;
+            }
+            tasks.forEach((t, i) => {
+                const typeMap = { '1': '重要且紧急', '2': '重要但不紧急', '3': '紧急但不重要', '4': '不重要不紧急' };
+                const prioMap = { high: '高', middle: '中', low: '低' };
+                html += `<div>${i} - ${t.content} | ${typeMap[t.type]} | 优先级：${prioMap[t.priority]} | 截止日期：${t.ddl}</div>`;
+            });
+            document.getElementById(`taskList${section.charAt(0).toUpperCase() + section.slice(1)}`).innerHTML = html;
+        }
+
+        // ========== 工作日志渲染 ==========
+        function renderLog() {
+            const totalTasks = tasks.length;
+            const finishedCount = finishedTasks.length;
+            const expiredCount = tasks.filter(t => getTimeDiff(t.ddl).total <= 0).length;
+            const halfCount = tasks.filter(t => t.halfWarned).length;
+
+            document.getElementById('logTotalTasks').innerText = totalTasks;
+            document.getElementById('logFinishedTasks').innerText = finishedCount;
+            document.getElementById('logExpiredTasks').innerText = expiredCount;
+            document.getElementById('logHalfTasks').innerText = halfCount;
+
+            let logHtml = '';
+            logs.forEach((log, index) => {
+                // 【功能】日志列表显示 - 每条日志带有序号、时间和内容，支持编辑和删除
+                logHtml += `<div class="log-item">
+                    <span class="log-number">#${index + 1}</span>
+                    <span class="log-time">[${log.time}]</span>
+                    <span class="log-text">${log.text}</span>
+                    <div class="log-actions">
+                        <button class="log-btn edit" onclick="editLog(${index})" title="编辑">✏️</button>
+                        <button class="log-btn delete" onclick="deleteLog(${index})" title="删除">🗑️</button>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('logArea').innerHTML = logHtml;
+        }
+
+        // 【功能】删除日志 - 根据索引删除单条日志
+        function deleteLog(index) {
+            updateActivityTime();
+            if (index < 0 || index >= logs.length) {
+                alert('这条日志不存在哦😺');
+                return;
+            }
+            const deletedLog = logs[index];
+            if (confirm(`确定要删除这条日志吗？\n\n[${deletedLog.time}] ${deletedLog.text}`)) {
+                logs.splice(index, 1);
+                save();
+                renderLog();
+                alert('日志删除成功啦📝，猫猫帮你处理好了～');
+                checkLogEgg();
+            }
+        }
+
+        // 【功能】编辑日志 - 打开编辑模态框修改日志内容
+        function editLog(index) {
+            updateActivityTime();
+            if (index < 0 || index >= logs.length) {
+                alert('这条日志不存在哦😺');
+                return;
+            }
+            const log = logs[index];
+            const newText = prompt('请输入新的日志内容：', log.text);
+            if (newText === null) {
+                // 用户取消编辑
+                return;
+            }
+            if (!newText.trim()) {
+                alert('日志内容不能为空哦😺');
+                return;
+            }
+            log.text = newText.trim();
+            save();
+            renderLog();
+            alert('日志修改完成啦✨，猫猫已经帮你更新好了～');
+        }
+
+        // ========== 手机+电脑 双端长按换主题 ==========
+        let longPressTimer = null;
+        const titleEl = document.getElementById('mainTitle');
+
+        function startLongPress() {
+            longPressTimer = setTimeout(() => {
+                const themes = ['default', 'pink', 'blue', 'purple'];
+                const currentIndex = themes.indexOf(currentTheme);
+                currentTheme = themes[(currentIndex + 1) % themes.length];
+
+                // 移除所有主题class
+                document.body.classList.remove('theme-pink', 'theme-blue', 'theme-purple');
+                // 添加新的主题class
+                if (currentTheme === 'pink') {
+                    document.body.classList.add('theme-pink');
+                } else if (currentTheme === 'blue') {
+                    document.body.classList.add('theme-blue');
+                } else if (currentTheme === 'purple') {
+                    document.body.classList.add('theme-purple');
+                }
+                // default主题不添加class，使用:root变量
+
+                document.getElementById('themeIndicator').innerText = `当前主题：${currentTheme === 'default' ? '默认' : currentTheme}`;
+                save();
+            }, 1000);
+        }
+
+        function stopLongPress() {
+            clearTimeout(longPressTimer);
+        }
+
+        // 电脑端
+        titleEl.addEventListener('mousedown', startLongPress);
+        titleEl.addEventListener('mouseup', stopLongPress);
+        titleEl.addEventListener('mouseleave', stopLongPress);
+
+        // 手机端
+        titleEl.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            startLongPress();
+        });
+        titleEl.addEventListener('touchend', stopLongPress);
+        titleEl.addEventListener('touchcancel', stopLongPress);
+
+        // 【彩蛋】周末横幅 - 周六/日显示周末快乐横幅
+        function checkWeekend() {
+            const day = new Date().getDay();
+            const banner = document.getElementById('weekendBanner');
+            if (day === 0 || day === 6) {
+                banner.innerText = "周末快乐～允许适当偷懒哦🍰";
+                banner.style.display = "block";
+            } else {
+                banner.style.display = "none";
+            }
+        }
+
+        // ========== 页面加载 + 定时轮询 ==========
+        window.onload = function() {
+            // 恢复主题class
+            if (currentTheme === 'pink') {
+                document.body.classList.add('theme-pink');
+            } else if (currentTheme === 'blue') {
+                document.body.classList.add('theme-blue');
+            } else if (currentTheme === 'purple') {
+                document.body.classList.add('theme-purple');
+            }
+            initDailyWords();
+            checkBirthday();
+            checkDdlWarn();
+            checkTimeGreetings();
+            checkWeekend();
+            checkConsecutiveUse();
+            checkSpecialDateEgg();
+            checkButtonClickEgg();
+            resetIdleTimer();
+            renderQuadrant();
+            startRealTimeRefresh(); // 页面加载就启动实时刷新
+            // 每分钟检查一次，确保到点触发
+            setInterval(checkTimeGreetings, 60000);
+            // 每分钟刷新DDL提醒
+            setInterval(checkDdlWarn, 60000);
+            // 每分钟检查周末横幅，跨天自动显示/隐藏
+            setInterval(checkWeekend, 60000);
+        };
+
+        // 页面关闭时停止定时器，避免内存泄漏
+        window.onbeforeunload = function() {
+            stopRealTimeRefresh();
+            clearTimeout(idleTimer);
+        };
+
+        // 切换深夜模式函数
+        function toggleNightMode() {
+            const isNightMode = document.body.classList.contains('night-mode');
+            if (isNightMode) {
+                document.body.classList.remove('night-mode');
+                alert('深夜模式已关闭☀️');
+            } else {
+                document.body.classList.add('night-mode');
+                alert('深夜模式已开启🌙');
+                // 触发深夜模式彩蛋（如果还没触发过）
+                triggerEgg('nightMode', '🌙 深夜模式开启', '猫猫帮你把光线调柔和啦，要早点休息哦～');
+                unlockAchievement('nightModeUse');
+            }
+            save();
+        }
+
+        // ========== 新彩蛋功能 ==========
+        
+        // 1. 连续使用彩蛋
+        function checkConsecutiveUse() {
+            const today = new Date().toLocaleDateString();
+            if (lastUseDate !== today) {
+                // 检查是否是连续的一天
+                const lastDate = new Date(lastUseDate);
+                const currentDate = new Date(today);
+                const diffTime = Math.abs(currentDate - lastDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays === 1) {
+                    consecutiveDays++;
+                } else {
+                    consecutiveDays = 1;
+                }
+                lastUseDate = today;
+                save();
+                
+                // 【彩蛋】连续使用彩蛋 - 连续使用3/7/30天时分别触发
+                if (consecutiveDays === 3) {
+                    triggerEgg('consecutive3', '🎉 连续使用3天', '人连续使用了3天，太棒啦！猫猫奖励你一个彩蛋～');
+                } else if (consecutiveDays === 7) {
+                    triggerEgg('consecutive7', '🎉 连续使用7天', '哇！人连续使用了7天，你真的超厉害的！');
+                    unlockAchievement('continuousUse');
+                } else if (consecutiveDays === 30) {
+                    triggerEgg('consecutive30', '🎉 连续使用30天', '天哪！人连续使用了30天，你是真正的时间管理大师！');
+                    unlockAchievement('use30Days');
+                }
+            }
+        }
+
+        // 【彩蛋】交互次数彩蛋 - 互动100/500/1000次时分别触发
+        function checkInteractionEgg() {
+            if (interactionCount === 100) {
+                triggerEgg('interaction100', '🎉 交心伙伴', '人已经和猫猫互动了100次，猫猫越来越离不开你了呢(´•ᴗ•`)');
+            } else if (interactionCount === 500) {
+                triggerEgg('interaction500', '🎉 心有灵犀', '人已经和猫猫互动了500次，有些话不用说也懂了呢(*´∀`)~♥');
+            } else if (interactionCount === 1000) {
+                triggerEgg('interaction1000', '🎉 特别的人', '人已经和猫猫互动了1000次，猫猫的心被你填满了呢(♡˙︶˙♡)');
+            }
+        }
+
+        // 【彩蛋】特殊日期彩蛋 - 公历节日和农历节日时触发
+        function checkSpecialDateEgg() {
+            const now = new Date();
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+
+            // ========== 公历节日 ==========
+            // 元旦
+            if (month === 1 && day === 1) {
+                triggerEgg('newYear', '🎊 新年快乐', '新年快乐呀人！新的一年要继续加油哦～');
+            }
+            // 情人节
+            else if (month === 2 && day === 14) {
+                triggerEgg('valentine', '💖 情人节快乐', '情人节快乐呀人！猫猫爱你～');
+            }
+            // 愚人节
+            else if (month === 4 && day === 1) {
+                triggerEgg('aprilFool', '🤪 愚人节快乐', '愚人节快乐！猫猫才不会骗你呢～');
+            }
+            // 国庆节
+            else if (month === 10 && day === 1) {
+                triggerEgg('nationalDay', '国庆节快乐', '国庆节快乐！祝祖国繁荣昌盛～');
+            }
+
+            // ========== 农历节日 ==========
+            // 使用 lunar-javascript 库检测农历节日
+            if (typeof Lunar !== 'undefined') {
+                try {
+                    const solar = Lunar.Solar.fromYmd(now.getFullYear(), month, day);
+                    const lunar = solar.getLunar();
+                    const lunarMonth = lunar.getMonth();
+                    const lunarDay = lunar.getDay();
+                    const isLeapMonth = lunar.isLeap();
+
+                    // 只检测非闰月的节日
+                    if (!isLeapMonth) {
+                        // 春节（正月初一）
+                        if (lunarMonth === 1 && lunarDay === 1) {
+                            triggerEgg('lunarNewYear', '🧧 春节快乐！', '过年啦！猫猫祝人新春快乐，天天开心，万事顺遂！');
+                        }
+                        // 元宵节（正月十五）
+                        else if (lunarMonth === 1 && lunarDay === 15) {
+                            triggerEgg('lanternFestival', '🏮 元宵节快乐', '元宵节到啦！吃汤圆赏花灯，猫猫祝人团团圆圆～🏮🥣');
+                        }
+                        // 端午节（五月初五）
+                        else if (lunarMonth === 5 && lunarDay === 5) {
+                            triggerEgg('dragonBoat', '🐉 端午节快乐', '端午节到啦！吃粽子赛龙舟，猫猫祝人安康～🐉🍙');
+                        }
+                        // 中秋节（八月十五）
+                        else if (lunarMonth === 8 && lunarDay === 15) {
+                            triggerEgg('midAutumn', '🥮 中秋节快乐', '中秋节到啦！赏月吃月饼，猫猫祝人阖家团圆～🥮🌕');
+                        }
+                    }
+                } catch (e) {
+                    // 农历计算出错时跳过
+                    console.log('农历计算错误:', e);
+                }
+            }
+        }
+
+        // 【彩蛋】功能探索者彩蛋 - 点击所有功能按钮时触发
+        function checkButtonClickEgg() {
+            // 检查是否点击了所有功能按钮
+            const requiredButtons = ['input', 'finish', 'edit', 'modify', 'log', 'progress', 'cat', 'achievements'];
+            const clickedButtons = Object.keys(buttonClicks);
+            const hasClickedAll = requiredButtons.every(btn => clickedButtons.includes(btn));
+            
+            if (hasClickedAll) {
+                triggerEgg('allButtons', '🎉 功能探索者', '人已经探索了所有功能，是系统的忠实用户！');
+                unlockAchievement('clickAllButtons');
+            }
+        }
+
+        // 【彩蛋】主题切换彩蛋 - 切换主题3/10次时分别触发
+        function checkThemeChangeEgg() {
+            themeChangeCount++;
+            save();
+            
+            if (themeChangeCount === 3) {
+                triggerEgg('theme3', '🎨 主题爱好者', '人已经切换了3次主题，喜欢哪个风格呀？');
+            } else if (themeChangeCount === 10) {
+                triggerEgg('theme10', '🎨 主题大师', '人已经切换了10次主题，你对美有独特的追求！');
+            }
+        }
+
+        // 【彩蛋】任务平衡大师彩蛋 - 四个象限都有5个以上任务时触发
+        function checkTaskCategoryEgg() {
+            const q1 = tasks.filter(t => t.type === '1').length;
+            const q2 = tasks.filter(t => t.type === '2').length;
+            const q3 = tasks.filter(t => t.type === '3').length;
+            const q4 = tasks.filter(t => t.type === '4').length;
+            
+            if (q1 >= 5 && q2 >= 5 && q3 >= 5 && q4 >= 5) {
+                triggerEgg('balancedTasks', '⚖️ 任务平衡大师', '人的任务分布很均衡，你是真正的时间管理专家！');
+            }
+        }
+
+        // 【彩蛋】优先级管理彩蛋 - 高/中/低优先级任务达到一定数量时分别触发
+        function checkPriorityEgg() {
+            const highPriority = tasks.filter(t => t.priority === 'high').length;
+            const middlePriority = tasks.filter(t => t.priority === 'middle').length;
+            const lowPriority = tasks.filter(t => t.priority === 'low').length;
+            
+            if (highPriority >= 10) {
+                triggerEgg('highPriorityMaster', '⭐ 高优先级掌控者', '人处理了很多高优先级任务，很有责任感！');
+            }
+            if (middlePriority >= 20) {
+                triggerEgg('middlePriorityMaster', '🌟 中流砥柱', '人处理了很多中优先级任务，是团队的核心！');
+            }
+            if (lowPriority >= 30) {
+                triggerEgg('lowPriorityMaster', '✨ 轻松应对', '人处理了很多低优先级任务，很有条理！');
+            }
+        }
+
+        // 【彩蛋】日志记录彩蛋 - 记录50/100条日志时分别触发
+        function checkLogEgg() {
+            if (logs.length >= 50) {
+                triggerEgg('log50', '📝 日志达人', '主人已经记录了50条日志，你的生活很充实！');
+            } else if (logs.length >= 100) {
+                triggerEgg('log100', '📝 日志大师', '主人已经记录了100条日志，你是生活的记录者！');
+            }
+        }
+
+        // 【彩蛋】成就解锁彩蛋 - 解锁10/30/50个成就时分别触发
+        function checkAchievementEgg() {
+            const unlockedCount = unlockedAchievements.length;
+            if (unlockedCount === 10) {
+                triggerEgg('achievement10', '🏆 成就解锁者', '已经解锁了10个成就，继续加油！');
+            } else if (unlockedCount === 30) {
+                triggerEgg('achievement30', '🏆 成就大师', '已经解锁了30个成就，你真的很厉害！');
+            } else if (unlockedCount === 50) {
+                triggerEgg('achievement50', '🏆 成就收藏家', '已经解锁了50个成就，你是真正的成就猎人！');
+            }
+        }
+
+        // 【彩蛋】时间管理大师彩蛋 - 完成50个以上任务且完成率80%以上时触发
+        function checkTimeMasterEgg() {
+            const totalTasks = tasks.length + finishedTasks.length;
+            const finished = finishedTasks.length;
+            const completionRate = totalTasks > 0 ? (finished / totalTasks) * 100 : 0;
+            
+            if (totalTasks >= 50 && completionRate >= 80) {
+                triggerEgg('timeMaster', '⏰ 时间管理大师', '完成了80%以上的任务，你是真正的时间管理大师！');
+            }
+        }
+
+        // 彩蛋触发辅助函数
+        function triggerEgg(id, title, content) {
+            if (!triggeredEggs.includes(id)) {
+                triggeredEggs.push(id);
+                save();
+                showEggModal(title, content);
+                unlockAchievement('eggTrigger');
+                
+                // 检查彩蛋收集成就
+                if (triggeredEggs.length === 5) {
+                    unlockAchievement('eggCollect');
+                } else if (triggeredEggs.length >= 10) {
+                    unlockAchievement('eggMaster');
+                }
+                
+                // 检查成就解锁彩蛋
+                checkAchievementEgg();
+            }
+        }
+
+        // 修改showSection函数，添加按钮点击记录
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id==='input'){
+                renderQuadrant();
+                startRealTimeRefresh(); // 切换到首页时启动实时刷新
+            } else {
+                stopRealTimeRefresh(); // 离开首页时停止刷新，节省性能
+            }
+            if(id==='finish')renderTaskList('finish');
+            if(id==='edit')renderTaskList('edit');
+            if(id==='modify')renderTaskList('modify');
+            if(id==='log')renderLog();
+            if(id==='progress'){
+                renderProgress();
+                renderCharts();
+                unlockAchievement('viewProgress');
+            }
+            if(id==='cat')renderCatTips();
+            if(id==='achievements')renderAchievements();
+            updateActivityTime();
+            
+            // 记录按钮点击
+            buttonClicks[id] = (buttonClicks[id] || 0) + 1;
+            save();
+            checkButtonClickEgg();
+        }
+
+        // 【功能】打开反馈问卷 - 在新窗口打开～
+        const FEEDBACK_MESSAGES = [
+            "收到收到！猫猫这就帮你打开问卷～🐾",
+            "好耶！问卷来啦～🎁",
+            "喵喵～打开问卷啦！😺",
+            "人真贴心～猫猫陪你一起填～💌",
+            "呜哇～新窗口打开啦！✨"
+        ];
+        
+        function openFeedbackWindow() {
+            const formUrl = 'https://docs.qq.com/doc/DSEdYb0xaZXR6ZXJF';
+            
+            // 显示可爱的提示
+            const msg = FEEDBACK_MESSAGES[Math.floor(Math.random() * FEEDBACK_MESSAGES.length)];
+            alert(msg);
+            
+            // 在新窗口打开
+            window.open(formUrl, '_blank', 'width=800,height=600,toolbar=yes,scrollbars=yes,resizable=yes');
+            
+            // 添加到日志
+            addLog(`【反馈】用户打开了反馈问卷`);
+            
+            // 解锁反馈成就
+            unlockAchievement('feedback');
+        }
+
+        // 修改主题切换函数，添加主题切换彩蛋检查
+        function startLongPress() {
+            longPressTimer = setTimeout(() => {
+                const themes = ['default', 'pink', 'blue', 'purple'];
+                const currentIndex = themes.indexOf(currentTheme);
+                currentTheme = themes[(currentIndex + 1) % themes.length];
+
+                // 移除所有主题class
+                document.body.classList.remove('theme-pink', 'theme-blue', 'theme-purple');
+                // 添加新的主题class
+                if (currentTheme === 'pink') {
+                    document.body.classList.add('theme-pink');
+                } else if (currentTheme === 'blue') {
+                    document.body.classList.add('theme-blue');
+                } else if (currentTheme === 'purple') {
+                    document.body.classList.add('theme-purple');
+                }
+                // default主题不添加class，使用:root变量
+
+                document.getElementById('themeIndicator').innerText = `当前主题：${currentTheme === 'default' ? '默认' : currentTheme}`;
+                checkThemeChangeEgg();
+                save();
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
