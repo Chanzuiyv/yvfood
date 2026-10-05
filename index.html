@@ -542,6 +542,19 @@
             0% { transform: translate(0, 0); opacity: 1; }
             100% { transform: translate(var(--tx), var(--ty)); opacity: 0; }
         }
+        /* ========== 彩带动画 ========== */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            top: -10px;
+            animation: confettiFall linear forwards;
+            z-index: 10000;
+        }
+        @keyframes confettiFall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity: 0.9; }
+        }
         .prompt-modal {
             position: fixed;
             top: 50%;
@@ -687,9 +700,13 @@
         
         <h1 class="title" id="mainTitle">四象限时间管理 📝</h1>
         <div class="theme-indicator" id="themeIndicator">当前主题：默认</div>
-        <div class="welcome-text">很高兴为人服务哦~❤️(*^▽^*) </div>
+        <div class="welcome-text" id="welcomeText">很高兴为你服务哦~❤️(*^▽^*) </div>
         
         <div id="birthdayWarn" class="birthday-warn"></div>
+        <div style="text-align:center; margin: 6px 0; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+            <button onclick="setBirthdayInfo()" style="background:#ff85b0; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:13px;">🎂 设置生日 / 祝福语</button>
+            <button onclick="setAddressAndCity()" style="background:#85c1e9; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:13px;">🏙️ 设置称呼 / 城市</button>
+        </div>
         <div id="warnArea"></div>
 
         <div class="menu">
@@ -715,7 +732,7 @@
         <div id="feedback" class="section">
             <h3>🐾 猫猫收件箱 📮</h3>
             <div class="cat-tips">
-                <p>喵～如果人在使用时遇到问题，或者有什么想告诉猫猫的，都可以写在这里哦～🐱</p>
+                <p>喵～如果你在使用时遇到问题，或者有什么想告诉猫猫的，都可以写在这里哦～🐱</p>
                 <p>点击下面的按钮，猫猫会在新窗口打开问卷～🎁</p>
                 <p>可以填写文本、上传文件，猫猫都能看到哦～✨</p>
             </div>
@@ -931,8 +948,8 @@
             "要按时吃饭!! 猫猫也饿了，想和你一起吃饭🍚",
             "每天进步一点点就很棒啦～ 猫猫为你骄傲ฅ^•ﻌ•^ฅ",
             "工作再忙也要记得休息哦～ 猫猫陪你一起偷懒🐱",
-            "武汉天气好不好，人要开心好不好☀️",
-            "人真的超棒的～ 💖",
+            "{city}天气好不好，{addr}要开心好不好☀️",
+            "{addr}真的超棒的～ 💖",
             "不要给自己太大压力哦～ 猫猫会一直在你身边的🌟",
             "今天也要加油哦～ 猫猫相信你一定可以的"
         ];
@@ -950,9 +967,21 @@
             "逐声计划做大做强!!", "你的付出，时光会记得⏰", "慢慢来，会好的💫",
             "你值得所有美好的事物和爱🎁"
         ];
-        // 【功能】生日日期设置
-        const BIRTHDAY_MONTH = 9;
-        const BIRTHDAY_DAY = 6;
+        // 【功能】生日日期设置（由用户自定义，存储在 localStorage）
+        let userBirthday = JSON.parse(localStorage.getItem('userBirthday')) || null;
+        let userBirthdayWishes = localStorage.getItem('userBirthdayWishes') || '';
+
+        // 【功能】用户称呼与所在城市（可自定义，存储在 localStorage）
+        let userAddress = localStorage.getItem('userAddress') || '人';
+        let userCity = localStorage.getItem('userCity') || '';
+
+        // 【功能】占位符替换：把文案里的 {addr} 替换为用户称呼，{city} 替换为用户城市
+        function applyVars(str) {
+            let s = str;
+            if (s.indexOf('{addr}') !== -1) s = s.split('{addr}').join(userAddress);
+            if (s.indexOf('{city}') !== -1) s = s.split('{city}').join(userCity || '你那边');
+            return s;
+        }
 
         // 【彩蛋】完成任务鼓励语 - 完成任务时随机显示一条
         const FINISH_ENCOURAGE = [
@@ -960,7 +989,7 @@
             "你超厉害的！继续加油✨ 猫猫在旁边给你打气哦",
             "猫猫为你鼓掌👏 真的好棒呀",
             "又完成一个任务，猫猫要给你奖励小鱼干～",
-            "今天的人也闪闪发光🌟",//愿我如星君如月
+            "今天的{addr}也闪闪发光🌟",//愿我如星君如月
             "完美收官！奖励自己一下吧🍬",
             "任务完成！真的超厉害的～ฅ^•ﻌ•^ฅ",
             "太棒啦！又离目标近了一步～✨ 猫猫陪你一起努力",//想说我会一直在，可你好像比较悲观，那我只说现在，现在的我很想陪着你，也很喜欢你
@@ -973,26 +1002,26 @@
             "任务添加成功啦！猫猫会好好帮你盯着DDL的哦🐾 绝对不会让你忘记的～",
             "太棒啦！又新增一个任务，加油哦😺 猫猫在旁边给你打气",
             "收到收到！猫猫已经把任务记在小本本上啦📝🐱 字迹工工整整的～",
-            "任务添加完成～人要记得按时完成哦，猫猫会监督你的😼 每天都会提醒你",
-            "好耶！又多了一个要完成的小目标，人超棒的✨🐱 我们一起努力吧",
+            "任务添加完成～{addr}要记得按时完成哦，猫猫会监督你的😼 每天都会提醒你",
+            "好耶！又多了一个要完成的小目标，{addr}超棒的✨🐱 我们一起努力吧",
             "猫猫已经帮你把任务收好啦，要按时完成哦😽 完成了记得告诉猫猫～",
             "任务添加成功！猫猫会像守护小鱼干一样守护你的任务哦🐟",
-            "好棒！人又给自己设定了新的目标～✨ 猫猫会一直陪着你",
-            "任务已记录在猫猫的小本本上啦📝 人要加油完成哦～",
+            "好棒！{addr}又给自己设定了新的目标～✨ 猫猫会一直陪着你",
+            "任务已记录在猫猫的小本本上啦📝 {addr}要加油完成哦～",
             "收到任务！猫猫会帮你盯着时间，绝对不会让你错过DDL的～🐾"
         ];
 
         // 【功能】完整时间段提示语 - 不同时间段显示不同问候
         const TIME_GREETINGS = {
-            morning_greet: { time: [8, 11.5], text: "☀️ 早安～早上好呀人！新的一天也要元气满满哦🐱💖" },
-            breakfast: { time: [8, 10], text: "🍞 人记得吃早饭哦～不吃早饭猫猫会担心的🥺" },
-            noon_greet: { time: [11.5, 13], text: "☀️ 午安呀～人记得吃午饭哦🍚😋" },
-            afternoon_greet: { time: [13, 18], text: "☀️ 下午好～人辛苦啦，要继续加油哦✨" },
+            morning_greet: { time: [8, 11.5], text: "☀️ 早安～早上好呀{addr}！新的一天也要元气满满哦🐱💖" },
+            breakfast: { time: [8, 10], text: "🍞 {addr}记得吃早饭哦～不吃早饭猫猫会担心的🥺" },
+            noon_greet: { time: [11.5, 13], text: "☀️ 午安呀～{addr}记得吃午饭哦🍚😋" },
+            afternoon_greet: { time: [13, 18], text: "☀️ 下午好～{addr}辛苦啦，要继续加油哦✨" },
             evening_greet: { time: [18, 23], text: "🌙 晚上好～今天辛苦啦，好好放松一下吧😌" },
-            dinner: { time: [17.5, 20], text: "🍚 人该吃晚饭啦～要好好吃饭哦🍽️" },
-            sleep_warn: { time: [1, 3], text: "😴 人快点睡觉啦～太晚睡猫猫会超级担心的🥺💤" },
-            sunrise: { time: [3, 6], text: "🌅 人是在等日出吗？猫猫陪着你哦🐾✨" },
-            wake_up: { time: [6, 8], text: "🌞 猫猫在等主人醒来哦～早安呀☀️🐱" }
+            dinner: { time: [17.5, 20], text: "🍚 {addr}该吃晚饭啦～要好好吃饭哦🍽️" },
+            sleep_warn: { time: [1, 3], text: "😴 {addr}快点睡觉啦～太晚睡猫猫会超级担心的🥺💤" },
+            sunrise: { time: [3, 6], text: "🌅 {addr}是在等日出吗？猫猫陪着你哦🐾✨" },
+            wake_up: { time: [6, 8], text: "🌞 猫猫在等{addr}醒来哦～早安呀☀️🐱" }
         };
 
         // 【功能】成就列表 - 所有成就的定义
@@ -1192,7 +1221,7 @@
 
         function exportLogNow() {
             exportLogToDesktop();
-            alert('日志导出成功啦😽，人也要记得好好休息哦～');
+            alert(applyVars('日志导出成功啦😽，{addr}也要记得好好休息哦～'));
         }
 
         function exportLogToDesktop() {
@@ -1299,93 +1328,177 @@
             return ((n-c)/(e-c))*100;
         }
 
-        // 【彩蛋】生日彩蛋 - 生日当天触发，显示生日横幅+烟花+生日信，生日当天最多触发2次
+        // 【彩蛋】生日彩蛋 - 生日当天触发，显示生日横幅+烟花+生日信
         function checkBirthday() {
-            const today = new Date();
-            const todayMonth = today.getMonth();
-            const todayDay = today.getDate();
-            const todayStr = `${today.getFullYear()}-${todayMonth}-${todayDay}`;
             const el = document.getElementById('birthdayWarn');
-            
-            // 检查是否是生日当天（临时改为今天展示）
-            const isBirthday = todayMonth === BIRTHDAY_MONTH && todayDay === BIRTHDAY_DAY;
-            const forceShowToday = true; // 强制今天展示生日彩蛋
-            if (isBirthday || forceShowToday) {
-                // 【功能】生日当天横幅文案
-                el.innerHTML="🎂 生日快乐呀🍰，恭喜人又长大一岁啦✌︎' ֊'，要天天开心哦🥺";
-                el.style.display="block";
 
-                // 今天无限次触发
+            // 如果用户未设置生日，不显示生日相关内容
+            if (!userBirthday) {
+                el.style.display = "none";
+                return;
+            }
+
+            const today = new Date();
+            const todayMonth = today.getMonth();  // 0-11
+            const todayDay = today.getDate();
+            const year = today.getFullYear();
+            const bMonth = userBirthday.month;   // 0-11
+            const bDay = userBirthday.day;
+            const calendar = userBirthday.calendar || 'solar';
+
+            // 计算今年生日对应的阳历月日
+            let birthdaySolarMonth = bMonth;
+            let birthdaySolarDay = bDay;
+
+            if (calendar === 'lunar' && typeof Lunar !== 'undefined') {
+                try {
+                    // 农历生日：把今年的农历日期换算成阳历
+                    const lunarBirthday = Lunar.fromYmd(year, bMonth + 1, bDay);
+                    const solarBirthday = lunarBirthday.getSolar();
+                    birthdaySolarMonth = solarBirthday.getMonth() - 1; // Lunar 月份 1-12 → JS 0-11
+                    birthdaySolarDay = solarBirthday.getDay();
+                } catch (e) {
+                    console.log('农历生日换算失败，回退为阳历:', e);
+                }
+            }
+
+            const isBirthday = todayMonth === birthdaySolarMonth && todayDay === birthdaySolarDay;
+            if (isBirthday) {
+                // 【功能】生日当天横幅文案
+                el.innerHTML = applyVars("🎂 生日快乐呀🍰，恭喜{addr}又长大一岁啦✌︎' ֊'，要天天开心哦🥺");
+                el.style.display = "block";
+                // 生日当天触发惊喜
                 triggerBirthdaySurprise();
             } else {
                 // 计算距离生日的天数
-                const birthday = new Date(today.getFullYear(), BIRTHDAY_MONTH, BIRTHDAY_DAY);
-                if(today > birthday) birthday.setFullYear(today.getFullYear() + 1);
+                const birthday = new Date(year, birthdaySolarMonth, birthdaySolarDay);
+                if (today > birthday) birthday.setFullYear(year + 1);
                 const diff = Math.ceil((birthday - today) / (86400000));
-                if(diff <= 7) {
+                if (diff <= 7) {
                     // 【功能】距离生日7天内显示倒计时横幅文案
-                    el.innerHTML=`🎂 距离人的生日还有${diff}天哦！`;
-                    el.style.display="block";
+                    el.innerHTML = applyVars(`🎂 距离{addr}的生日还有${diff}天哦！`);
+                    el.style.display = "block";
                 } else {
-                    el.style.display="none";
+                    el.style.display = "none";
                 }
             }
         }
 
-        // 【彩蛋】生日惊喜烟花+信件内容
+        // 【功能】让用户设置自己的生日（阳历/农历）和写给自己的生日祝福
+        function setBirthdayInfo() {
+            // 1. 选择历法类型
+            const calendarChoice = prompt(
+                "📅 你的生日是按哪种历法过的呀？\n\n请输入：\n  1 = 阳历（公历）\n  2 = 农历（阴历）",
+                userBirthday ? (userBirthday.calendar === 'lunar' ? '2' : '1') : '1'
+            );
+            if (calendarChoice === null) return;
+            const calendar = (calendarChoice.trim() === '2') ? 'lunar' : 'solar';
+
+            // 2. 输入生日月份
+            const defaultMonth = userBirthday ? String(userBirthday.month + 1) : '';
+            const monthStr = prompt(
+                calendar === 'lunar'
+                    ? "🌙 请输入农历生日月份（1-12）："
+                    : "🎂 请输入阳历生日月份（1-12）：",
+                defaultMonth
+            );
+            if (monthStr === null) return;
+            const month = parseInt(monthStr, 10);
+            if (isNaN(month) || month < 1 || month > 12) {
+                alert("月份输入无效，请输入 1-12 之间的数字哦～");
+                return;
+            }
+
+            // 3. 输入生日日期
+            const defaultDay = userBirthday ? String(userBirthday.day) : '';
+            const dayStr = prompt("📅 请输入生日日期（1-31）：", defaultDay);
+            if (dayStr === null) return;
+            const day = parseInt(dayStr, 10);
+            if (isNaN(day) || day < 1 || day > 31) {
+                alert("日期输入无效，请输入 1-31 之间的数字哦～");
+                return;
+            }
+
+            // 4. 输入写给自己的生日祝福（写完即隐藏，之后不再弹出此窗口）
+            // 只有在从未写过祝福时才询问，已保存过则跳过，保持惊喜
+            if (!userBirthdayWishes || !userBirthdayWishes.trim()) {
+                const wishes = prompt(
+                    "💌 请输入你想对自己说的生日祝福（写完会藏起来，生日当天才弹出来哦）："
+                );
+                if (wishes === null) return;
+                userBirthdayWishes = wishes;
+                localStorage.setItem('userBirthdayWishes', userBirthdayWishes);
+            }
+
+            // 保存到 localStorage
+            userBirthday = { month: month - 1, day: day, calendar: calendar }; // JS 月份从 0 开始
+            localStorage.setItem('userBirthday', JSON.stringify(userBirthday));
+
+            const calText = calendar === 'lunar' ? '农历' : '阳历';
+            alert(`已保存！你的生日是 ${calText} ${month}月${day}日 🎂\n生日当天会放烟花+彩带，并显示你写的祝福哦～`);
+            checkBirthday();
+        }
+
+        // 【功能】让用户设置称呼和所在城市
+        function setAddressAndCity() {
+            // 称呼
+            const addrInput = prompt(
+                "🐱 猫猫平时怎么称呼你呀？\n（不填则默认为「人」）",
+                userAddress && userAddress !== '人' ? userAddress : ''
+            );
+            if (addrInput !== null) {
+                const trimmed = addrInput.trim();
+                userAddress = trimmed ? trimmed : '人';
+                localStorage.setItem('userAddress', userAddress);
+            }
+
+            // 城市
+            const cityInput = prompt(
+                "🏙️ 你在哪个城市呀？\n（猫猫会在问候里提到你那边的天气～）",
+                userCity || ''
+            );
+            if (cityInput !== null) {
+                userCity = cityInput.trim();
+                localStorage.setItem('userCity', userCity);
+            }
+
+            alert(`已保存！\n称呼：${userAddress}\n城市：${userCity || '（未填写）'}`);
+            // 刷新欢迎语和猫猫提示区域以应用新称呼
+            const welcomeEl = document.getElementById('welcomeText');
+            if (welcomeEl) welcomeEl.innerText = applyVars('很高兴为{addr}服务哦~❤️(*^▽^*) ');
+            if (typeof renderCatTips === 'function') renderCatTips();
+        }
+
+        // 【彩蛋】生日惊喜烟花+彩带+信件内容（用户祝福 + 系统祝福）
         function triggerBirthdaySurprise() {
             createFireworks();
+            createConfetti();
             setTimeout(() => {
-                // 设置标记，用于关闭后弹出第二封信
-                window.birthdayEggShown = true;
-                // 【彩蛋】生日信件内容
-                const birthdayLetter = `
-                🎂 生日快乐！🎂
-                
-                亲爱的人：
-                
-                今天是你的生日，猫猫祝你生日快乐呀🥳
-                愿你每天都开开心心，所有的愿望都能实现✨
-                感谢你一直以来的努力和坚持，你真的超棒的！
-                新的一岁，继续闪闪发光吧🌟
-                猫猫知道生活充满不确定性。
-                给人看猫猫很喜欢的一段心里独白，
-                
-                """
-                和你在一起之后，我就像很多人一样，
-                脑子里总是冒出永远这个词，
-                想永远被你喜欢，永远和你在一起。
-                可永远不是一个时间单位，
-                找不到任何算法去度量和计算，
-                这样含糊不精确的表达，我无法理解。
-                后来，某一天，我忽然想到，
-                既然每个人都选择取永远的极限值为无穷大，
-                那么我可以不可以把它取作无穷小呢。
-                取作无穷小，永远就变成了瞬间，所以……
-                在这一个瞬间，我是拥有你的。
-                这就等同于永远了。
-                下个瞬间，也请你爱上我。
-                """
+                // 系统自带的生日祝福
+                const systemWishes = applyVars(
+                    "🎉 亲爱的{addr}，生日快乐呀！🎂\n\n" +
+                    "猫猫在这里祝你新的一岁：\n" +
+                    "✨ 天天开心，事事顺遂\n" +
+                    "✨ 身体健康，平安喜乐\n" +
+                    "✨ 所有愿望都能实现\n" +
+                    "✨ 继续闪闪发光，做最棒的自己\n\n" +
+                    "—— 永远爱你的猫猫 🐱"
+                );
 
-                其实写到这里就很哭，
-                猫猫想起来有一天晚上打电话。
-                你问我为什么要把彩蛋设那么久，
-                我就那么笃定我们这份情谊会一直走下去吗?
-                我不敢轻易给你未来的承诺，
-                我怕你觉得轻浮。
-                我说我想要SP，除了自我发展的需要，
-                我也想过如果我够强，
-                我们的未来重合度就会大一些了吧。
-                至少现在的你拥有我，这是完完全全可以肯定的。
-                而下一个瞬间，我也会选择陪着你。
-                喜欢真的是一件很不讲道理的事情，
-                希望你开心幸福顺遂。
-                生日快乐🎂
-                
-                —— 永远陪着你的猫猫 🐱
-                `;
+                // 用户写给自己的生日祝福（隐藏的，生日当天才揭晓）
+                const userWishes = (userBirthdayWishes && userBirthdayWishes.trim())
+                    ? userBirthdayWishes
+                    : null;
+
+                // 组合展示：先用户的，再系统的
+                let content = '';
+                if (userWishes) {
+                    content += "💌 你写给自己的生日祝福：\n" + userWishes + "\n\n";
+                }
+                content += systemWishes;
+
                 // 直接显示生日信，不使用triggerEgg，确保每次都能看到
-                showEggModal('🎂 生日惊喜！', birthdayLetter);
+                showEggModal('🎂 生日惊喜！', content);
                 // 解锁成就
                 unlockAchievement('birthdayUse');
                 // 记录生日彩蛋触发
@@ -1429,6 +1542,31 @@
                     createdFireworks++;
                 }
             }, interval);
+        }
+
+        // 【彩蛋】生日彩带动画 - 从顶部飘落彩色纸屑
+        function createConfetti() {
+            const container = document.getElementById('fireworksContainer');
+            const colors = ['#ff6b9d', '#ff85c0', '#3498db', '#17a2b8', '#ffc107', '#dc3545', '#28a745', '#9b59b6'];
+            const shapes = ['50%', '0%', '2px'];
+            const total = 120;
+            for (let i = 0; i < total; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                const size = 6 + Math.random() * 10;
+                confetti.style.width = `${size}px`;
+                confetti.style.height = `${size * (0.4 + Math.random() * 0.6)}px`;
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.borderRadius = shapes[Math.floor(Math.random() * shapes.length)];
+                confetti.style.animationDuration = `${2.5 + Math.random() * 3}s`;
+                confetti.style.animationDelay = `${Math.random() * 2}s`;
+                container.appendChild(confetti);
+            }
+            // 5 秒后清理彩带 DOM
+            setTimeout(() => {
+                container.querySelectorAll('.confetti').forEach(el => el.remove());
+            }, 7000);
         }
 
         // DDL 提醒 + 猫爪滚动条
@@ -1517,22 +1655,22 @@
             // 输错猫猫软萌提示
             if(inputStep===0){
                 const map={1:'2',2:'3',3:'1',4:'4'};
-                if(!map[v]){alert("哎呀人～要输入1-4的数字哦🐱");return;}
+                if(!map[v]){alert(applyVars("哎呀{addr}～要输入1-4的数字哦🐱"));return;}
                 tempTask.type=map[v]; inputStep=1;
             }else if(inputStep===1){
-                if(!v){alert("人要输入任务内容哦，不然猫猫记不住哒😺");return;}
+                if(!v){alert(applyVars("{addr}要输入任务内容哦，不然猫猫记不住哒😺"));return;}
                 // 输入「猫猫」触发专属可爱回应
                 if(v.trim() === '猫猫'){
                     alert("猫猫收到！这是最重要的任务！ฅ•ω•ฅ");
                     // 【彩蛋】猫猫关键词彩蛋 - 输入"猫猫"时触发
-                    triggerEgg('catKeyword', '🐱 猫猫关键词彩蛋', '人提到了猫猫！这是最重要的任务～');
+                    triggerEgg('catKeyword', '🐱 猫猫关键词彩蛋', applyVars('{addr}提到了猫猫！这是最重要的任务～'));
                 }
                 tempTask.content=v; inputStep=2;
             }else if(inputStep===2){
-                if(!['high','middle','low'].includes(v)){alert("人要输入high/middle/low哦，猫猫看不懂别的哒🥺");return;}
+                if(!['high','middle','low'].includes(v)){alert(applyVars("{addr}要输入high/middle/low哦，猫猫看不懂别的哒🥺"));return;}
                 tempTask.priority=v; inputStep=3;
             }else if(inputStep===3){
-                if(!v){alert("人要选一个DDL哦，不然猫猫没法提醒你啦😿");return;}
+                if(!v){alert(applyVars("{addr}要选一个DDL哦，不然猫猫没法提醒你啦😿"));return;}
                 tempTask.ddl=v;
                 tempTask.createTime=new Date().toISOString();
                 tempTask.halfWarned=false;
@@ -1543,7 +1681,7 @@
                 renderQuadrant();
                 closeModal();
                 // 添加任务成功的拟猫化随机回复
-                const successMsg = ADD_TASK_SUCCESS[Math.floor(Math.random() * ADD_TASK_SUCCESS.length)];
+                const successMsg = applyVars(ADD_TASK_SUCCESS[Math.floor(Math.random() * ADD_TASK_SUCCESS.length)]);
                 alert(successMsg);
                 // 检查任务相关彩蛋
                 checkTaskCategoryEgg();
@@ -1798,7 +1936,7 @@
         }
 
         function renderCatTips() {
-            const tip = CAT_NORMAL_TIPS[Math.floor(Math.random()*CAT_NORMAL_TIPS.length)];
+            const tip = applyVars(CAT_NORMAL_TIPS[Math.floor(Math.random()*CAT_NORMAL_TIPS.length)]);
             document.getElementById('catTipsContent').innerHTML=`<p>${tip}</p>`;
             const word = shuffledDailyWords[currentWordIndex];
             document.getElementById('dailyWords').innerText = `💌：${word}`;
@@ -1886,33 +2024,6 @@
                     fireworksActive = false;
                 }, 2000);
             }
-            
-            // 生日彩蛋关闭后弹出新的信
-            if (window.birthdayEggShown) {
-                window.birthdayEggShown = false;
-                window.secondLetterShown = true;
-                setTimeout(() => {
-                    const secondLetter = `
-                    你好呀，现在是2026/5/15
-                    我现在回去看生日彩蛋还是有点想哭。。。
-                    其实是爱哭鬼来的。
-                    好吧，打这行字的时候就好想哭啊。
-                    首先恭喜你发现这个好久以后才出现的彩蛋。
-                    想说的话好多啊，不知道从何说起，
-                    好像写在这里太不正式，
-                    决定写到给你的日记本里。
-                    喜欢你。
-                    天天开心。
-                    `;
-                    showEggModal('', secondLetter);
-                }, 500);
-            } else if (window.secondLetterShown) {
-                // 第二封信关闭后打开PDF文档
-                window.secondLetterShown = false;
-                setTimeout(() => {
-                    window.open('猫猫四象限待办系统 全量彩蛋终极完整版整理.pdf', '_blank');
-                }, 500);
-            }
         }
 
         function openModal() {
@@ -1939,7 +2050,7 @@
             checkInteractionEgg();
             // 30分钟 = 30 * 60 * 1000 = 1800000毫秒
             idleTimer = setTimeout(() => {
-                showEggModal("🐾 摸鱼提醒", "人在摸鱼吗？快回来干活～🐾");
+                showEggModal("🐾 摸鱼提醒", applyVars("{addr}在摸鱼吗？快回来干活～🐾"));
                 unlockAchievement('idleWarn');
             }, 1800000);
         }
@@ -1956,7 +2067,7 @@
                 const [start, end] = slotInfo.time;
                 // 判断当前时间在区间内，且当天没触发过
                 if (currentTimeNum >= start && currentTimeNum < end && !triggeredSlots.includes(slotKey)) {
-                    alert(slotInfo.text);
+                    alert(applyVars(slotInfo.text));
                     triggeredSlots.push(slotKey);
                     save();
                     break;
@@ -2008,7 +2119,7 @@
                 return;
             }
             if (index < 0 || index >= tasks.length) {
-                alert('哎呀人，这个序号不对哦，要输入列表里有的数字呀🐾');
+                alert(applyVars('哎呀{addr}，这个序号不对哦，要输入列表里有的数字呀🐾'));
                 return;
             }
             const finishedTask = tasks.splice(index, 1)[0];
@@ -2017,7 +2128,7 @@
             save();
             renderTaskList('finish');
             renderQuadrant();
-            const encourage = FINISH_ENCOURAGE[Math.floor(Math.random() * FINISH_ENCOURAGE.length)];
+            const encourage = applyVars(FINISH_ENCOURAGE[Math.floor(Math.random() * FINISH_ENCOURAGE.length)]);
             alert(encourage);
             addLog(`完成任务：${finishedTask.content}`);
             document.getElementById('finishInput').value = '';
@@ -2035,15 +2146,15 @@
             const newDdl = document.getElementById('newDdl').value;
             const index = parseInt(indexInput);
             if (isNaN(index)) {
-                alert('人要输入数字序号哦，猫猫看不懂别的哒😺');
+                alert(applyVars('{addr}要输入数字序号哦，猫猫看不懂别的哒😺'));
                 return;
             }
             if (index < 0 || index >= tasks.length) {
-                alert('哎呀人，这个序号不对哦，要输入列表里有的数字呀🐾');
+                alert(applyVars('哎呀{addr}，这个序号不对哦，要输入列表里有的数字呀🐾'));
                 return;
             }
             if (!newDdl) {
-                alert('人要选一个新的DDL哦，不然猫猫没法提醒你啦😿');
+                alert(applyVars('{addr}要选一个新的DDL哦，不然猫猫没法提醒你啦😿'));
                 return;
             }
             const oldDdl = tasks[index].ddl;
@@ -2068,11 +2179,11 @@
             const newPriority = document.getElementById('modifyPriority').value;
             const index = parseInt(indexInput);
             if (isNaN(index)) {
-                alert('人要输入数字序号哦，猫猫看不懂别的哒😺');
+                alert(applyVars('{addr}要输入数字序号哦，猫猫看不懂别的哒😺'));
                 return;
             }
             if (index < 0 || index >= tasks.length) {
-                alert('哎呀人，这个序号不对哦，要输入列表里有的数字呀🐾');
+                alert(applyVars('哎呀{addr}，这个序号不对哦，要输入列表里有的数字呀🐾'));
                 return;
             }
             const oldContent = tasks[index].content;
@@ -2276,7 +2387,23 @@
                 document.body.classList.add('theme-purple');
             }
             initDailyWords();
+            // 动态设置欢迎语（使用用户称呼）
+            const welcomeEl = document.getElementById('welcomeText');
+            if (welcomeEl) welcomeEl.innerText = applyVars('很高兴为{addr}服务哦~❤️(*^▽^*) ');
             checkBirthday();
+            // 首次使用引导：询问称呼、城市、生日
+            const firstUseDone = localStorage.getItem('firstUseDone');
+            if (!firstUseDone) {
+                setTimeout(() => {
+                    if (confirm("🐱 欢迎使用猫猫备忘录！\n\n要不要先设置一下你的称呼、所在城市，\n还有你的生日呀？（之后随时可以改哦）")) {
+                        setAddressAndCity();
+                        setTimeout(() => {
+                            if (!userBirthday) setBirthdayInfo();
+                        }, 300);
+                    }
+                    localStorage.setItem('firstUseDone', '1');
+                }, 600);
+            }
             checkDdlWarn();
             checkTimeGreetings();
             checkWeekend();
@@ -2338,12 +2465,12 @@
                 
                 // 【彩蛋】连续使用彩蛋 - 连续使用3/7/30天时分别触发
                 if (consecutiveDays === 3) {
-                    triggerEgg('consecutive3', '🎉 连续使用3天', '人连续使用了3天，太棒啦！猫猫奖励你一个彩蛋～');
+                    triggerEgg('consecutive3', '🎉 连续使用3天', applyVars('{addr}连续使用了3天，太棒啦！猫猫奖励你一个彩蛋～'));
                 } else if (consecutiveDays === 7) {
-                    triggerEgg('consecutive7', '🎉 连续使用7天', '哇！人连续使用了7天，你真的超厉害的！');
+                    triggerEgg('consecutive7', '🎉 连续使用7天', applyVars('哇！{addr}连续使用了7天，你真的超厉害的！'));
                     unlockAchievement('continuousUse');
                 } else if (consecutiveDays === 30) {
-                    triggerEgg('consecutive30', '🎉 连续使用30天', '天哪！人连续使用了30天，你是真正的时间管理大师！');
+                    triggerEgg('consecutive30', '🎉 连续使用30天', applyVars('天哪！{addr}连续使用了30天，你是真正的时间管理大师！'));
                     unlockAchievement('use30Days');
                 }
             }
@@ -2352,11 +2479,11 @@
         // 【彩蛋】交互次数彩蛋 - 互动100/500/1000次时分别触发
         function checkInteractionEgg() {
             if (interactionCount === 100) {
-                triggerEgg('interaction100', '🎉 交心伙伴', '人已经和猫猫互动了100次，猫猫越来越离不开你了呢(´•ᴗ•`)');
+                triggerEgg('interaction100', '🎉 交心伙伴', applyVars('{addr}已经和猫猫互动了100次，猫猫越来越离不开你了呢(´•ᴗ•`)'));
             } else if (interactionCount === 500) {
-                triggerEgg('interaction500', '🎉 心有灵犀', '人已经和猫猫互动了500次，有些话不用说也懂了呢(*´∀`)~♥');
+                triggerEgg('interaction500', '🎉 心有灵犀', applyVars('{addr}已经和猫猫互动了500次，有些话不用说也懂了呢(*´∀`)~♥'));
             } else if (interactionCount === 1000) {
-                triggerEgg('interaction1000', '🎉 特别的人', '人已经和猫猫互动了1000次，猫猫的心被你填满了呢(♡˙︶˙♡)');
+                triggerEgg('interaction1000', '🎉 特别的人', applyVars('{addr}已经和猫猫互动了1000次，猫猫的心被你填满了呢(♡˙︶˙♡)'));
             }
         }
 
@@ -2369,11 +2496,11 @@
             // ========== 公历节日 ==========
             // 元旦
             if (month === 1 && day === 1) {
-                triggerEgg('newYear', '🎊 新年快乐', '新年快乐呀人！新的一年要继续加油哦～');
+                triggerEgg('newYear', '🎊 新年快乐', applyVars('新年快乐呀{addr}！新的一年要继续加油哦～'));
             }
             // 情人节
             else if (month === 2 && day === 14) {
-                triggerEgg('valentine', '💖 情人节快乐', '情人节快乐呀人！猫猫爱你～');
+                triggerEgg('valentine', '💖 情人节快乐', applyVars('情人节快乐呀{addr}！猫猫爱你～'));
             }
             // 愚人节
             else if (month === 4 && day === 1) {
@@ -2398,19 +2525,19 @@
                     if (!isLeapMonth) {
                         // 春节（正月初一）
                         if (lunarMonth === 1 && lunarDay === 1) {
-                            triggerEgg('lunarNewYear', '🧧 春节快乐！', '过年啦！猫猫祝人新春快乐，天天开心，万事顺遂！');
+                            triggerEgg('lunarNewYear', '🧧 春节快乐！', applyVars('过年啦！猫猫祝{addr}新春快乐，天天开心，万事顺遂！'));
                         }
                         // 元宵节（正月十五）
                         else if (lunarMonth === 1 && lunarDay === 15) {
-                            triggerEgg('lanternFestival', '🏮 元宵节快乐', '元宵节到啦！吃汤圆赏花灯，猫猫祝人团团圆圆～🏮🥣');
+                            triggerEgg('lanternFestival', '🏮 元宵节快乐', applyVars('元宵节到啦！吃汤圆赏花灯，猫猫祝{addr}团团圆圆～🏮🥣'));
                         }
                         // 端午节（五月初五）
                         else if (lunarMonth === 5 && lunarDay === 5) {
-                            triggerEgg('dragonBoat', '🐉 端午节快乐', '端午节到啦！吃粽子赛龙舟，猫猫祝人安康～🐉🍙');
+                            triggerEgg('dragonBoat', '🐉 端午节快乐', applyVars('端午节到啦！吃粽子赛龙舟，猫猫祝{addr}安康～🐉🍙'));
                         }
                         // 中秋节（八月十五）
                         else if (lunarMonth === 8 && lunarDay === 15) {
-                            triggerEgg('midAutumn', '🥮 中秋节快乐', '中秋节到啦！赏月吃月饼，猫猫祝人阖家团圆～🥮🌕');
+                            triggerEgg('midAutumn', '🥮 中秋节快乐', applyVars('中秋节到啦！赏月吃月饼，猫猫祝{addr}阖家团圆～🥮🌕'));
                         }
                     }
                 } catch (e) {
@@ -2428,7 +2555,7 @@
             const hasClickedAll = requiredButtons.every(btn => clickedButtons.includes(btn));
             
             if (hasClickedAll) {
-                triggerEgg('allButtons', '🎉 功能探索者', '人已经探索了所有功能，是系统的忠实用户！');
+                triggerEgg('allButtons', '🎉 功能探索者', applyVars('{addr}已经探索了所有功能，是系统的忠实用户！'));
                 unlockAchievement('clickAllButtons');
             }
         }
@@ -2439,9 +2566,9 @@
             save();
             
             if (themeChangeCount === 3) {
-                triggerEgg('theme3', '🎨 主题爱好者', '人已经切换了3次主题，喜欢哪个风格呀？');
+                triggerEgg('theme3', '🎨 主题爱好者', applyVars('{addr}已经切换了3次主题，喜欢哪个风格呀？'));
             } else if (themeChangeCount === 10) {
-                triggerEgg('theme10', '🎨 主题大师', '人已经切换了10次主题，你对美有独特的追求！');
+                triggerEgg('theme10', '🎨 主题大师', applyVars('{addr}已经切换了10次主题，你对美有独特的追求！'));
             }
         }
 
@@ -2453,7 +2580,7 @@
             const q4 = tasks.filter(t => t.type === '4').length;
             
             if (q1 >= 5 && q2 >= 5 && q3 >= 5 && q4 >= 5) {
-                triggerEgg('balancedTasks', '⚖️ 任务平衡大师', '人的任务分布很均衡，你是真正的时间管理专家！');
+                triggerEgg('balancedTasks', '⚖️ 任务平衡大师', applyVars('{addr}的任务分布很均衡，你是真正的时间管理专家！'));
             }
         }
 
@@ -2464,13 +2591,13 @@
             const lowPriority = tasks.filter(t => t.priority === 'low').length;
             
             if (highPriority >= 10) {
-                triggerEgg('highPriorityMaster', '⭐ 高优先级掌控者', '人处理了很多高优先级任务，很有责任感！');
+                triggerEgg('highPriorityMaster', '⭐ 高优先级掌控者', applyVars('{addr}处理了很多高优先级任务，很有责任感！'));
             }
             if (middlePriority >= 20) {
-                triggerEgg('middlePriorityMaster', '🌟 中流砥柱', '人处理了很多中优先级任务，是团队的核心！');
+                triggerEgg('middlePriorityMaster', '🌟 中流砥柱', applyVars('{addr}处理了很多中优先级任务，是团队的核心！'));
             }
             if (lowPriority >= 30) {
-                triggerEgg('lowPriorityMaster', '✨ 轻松应对', '人处理了很多低优先级任务，很有条理！');
+                triggerEgg('lowPriorityMaster', '✨ 轻松应对', applyVars('{addr}处理了很多低优先级任务，很有条理！'));
             }
         }
 
@@ -2560,7 +2687,7 @@
             "收到收到！猫猫这就帮你打开问卷～🐾",
             "好耶！问卷来啦～🎁",
             "喵喵～打开问卷啦！😺",
-            "人真贴心～猫猫陪你一起填～💌",
+            "{addr}真贴心～猫猫陪你一起填～💌",
             "呜哇～新窗口打开啦！✨"
         ];
         
@@ -2568,7 +2695,7 @@
             const formUrl = 'https://docs.qq.com/doc/DSEdYb0xaZXR6ZXJF';
             
             // 显示可爱的提示
-            const msg = FEEDBACK_MESSAGES[Math.floor(Math.random() * FEEDBACK_MESSAGES.length)];
+            const msg = applyVars(FEEDBACK_MESSAGES[Math.floor(Math.random() * FEEDBACK_MESSAGES.length)]);
             alert(msg);
             
             // 在新窗口打开
